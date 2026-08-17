@@ -1,0 +1,47 @@
+export type BuildingMetadata = {
+    officialName: string;
+    aliases?: string[];
+};
+
+export const BUILDING_METADATA: Record<string, BuildingMetadata> = {
+    AL: { officialName: 'Arts Lecture Hall' },
+    B1: { officialName: 'Biology 1' },
+    B2: { officialName: 'Biology 2' },
+    BMH: { officialName: 'B.C. Matthews Hall' },
+    C2: { officialName: 'Chemistry 2' },
+    CMH: { officialName: 'Claudette Millar Hall' },
+    CPH: { officialName: 'Carl A. Pollock Hall' },
+    DC: { officialName: 'William G. Davis Computer Research Centre', aliases: ['Davis', 'Davis Centre'] },
+    DP: { officialName: 'Dana Porter Library', aliases: ['Dana Porter'] },
+    DWE: { officialName: 'Douglas Wright Engineering Building', aliases: ['Douglas Wright'] },
+    E2: { officialName: 'Engineering 2' },
+    E3: { officialName: 'Engineering 3' },
+    E5: { officialName: 'Engineering 5', aliases: ['Engineering 5'] },
+    E6: { officialName: 'Engineering 6' },
+    E7: { officialName: 'Engineering 7', aliases: ['Engineering 7'] },
+    EIT: { officialName: 'Centre for Environmental and Information Technology' },
+    ERC: { officialName: 'Energy Research Centre' },
+    ESC: { officialName: 'Earth Sciences and Chemistry' },
+    EV1: { officialName: 'Environment 1' },
+    EV2: { officialName: 'Environment 2' },
+    EV3: { officialName: 'Environment 3' },
+    EXP: { officialName: 'Expansion Building' },
+    HH: { officialName: 'J.G. Hagey Hall of the Humanities', aliases: ['Hagey Hall'] },
+    M3: { officialName: 'Mathematics 3' },
+    MC: { officialName: 'Mathematics and Computer Building', aliases: ['Math', 'Math Building', 'Computer Building'] },
+    MKV: { officialName: 'Minota Hagey Residence' },
+    ML: { officialName: 'Modern Languages' },
+    NH: { officialName: 'Ira G. Needles Hall' },
+    OPT: { officialName: 'School of Optometry and Vision Science' },
+    PAC: { officialName: 'Physical Activities Complex', aliases: ['PAC'] },
+    PAS: { officialName: 'Psychology, Anthropology, Sociology' },
+    PHY: { officialName: 'Physics' },
+    QNC: { officialName: 'Mike and Ophelia Lazaridis Quantum-Nano Centre', aliases: ['Quantum Nano Centre', 'Quantum-Nano Centre'] },
+    RCH: { officialName: 'J.R. Coutts Engineering Lecture Hall' },
+    REV: { officialName: 'Ron Eydt Village' },
+    SCH: { officialName: 'South Campus Hall' },
+    SLC: { officialName: 'Student Life Centre', aliases: ['Student Life', 'Student Centre'] },
+    STC: { officialName: 'Science Teaching Complex', aliases: ['Science Teaching'] },
+    TC: { officialName: 'Tatham Centre' },
+    V1: { officialName: 'Village 1' }
+};

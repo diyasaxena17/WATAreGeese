@@ -1,5 +1,6 @@
 import { SingleValue } from 'react-select';
 import { Coordinate, BuildingFloor, Location } from '../algorithm/types';
+import { getBuildingSearchDocuments } from '../campus-data/buildingSearch';
 import { getBuildings } from '../campus-data/selectors';
 
 export type OptionType = {
@@ -34,8 +35,10 @@ export function getBuildingFloorOptions() {
 // returns function to be passed into React.useMemo
 export function getBuildingOptions(buildingFloorOptions: Map<string, string[]>) {
     return () => {
+        const labelsByBuilding = new Map(getBuildingSearchDocuments()
+            .map(building => [building.buildingCode, building.label]));
         const arr = Array.from(buildingFloorOptions.keys())
-            .map(building => {return { value: building, label: building }});
+            .map(building => {return { value: building, label: labelsByBuilding.get(building) ?? building }});
         arr.sort((a, b) => a.value.localeCompare(b.value));
         return arr;
     }
