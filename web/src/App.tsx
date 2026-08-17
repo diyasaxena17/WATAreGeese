@@ -98,7 +98,7 @@ function App() {
 			<div id="input-region" className="z-10 absolute inset-y-[2%] flex flex-col gap-2 place-self-start">
 
 				<h1 id="header" className="place-self-center text-xl md:text-3xl font-bold px-2 py-1 bg-white/75 shadow-2xl">
-					WATIsGrass: UW Tunnels
+					WATAreGeese: UW Tunnels
 				</h1>
 
 				<div className="">

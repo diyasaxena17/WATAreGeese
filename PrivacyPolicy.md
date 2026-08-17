@@ -1,8 +1,8 @@
-# Privacy Policy for WATIsGrass
+# Privacy Policy for WATAreGeese
 
 **Effective Date:** 03/11/2024
 
-At WATIsGrass, we respect your privacy and are committed to protecting any personal information you choose to share with us. This privacy policy outlines our practices regarding the collection, use, and disclosure of your information.
+At WATAreGeese, we respect your privacy and are committed to protecting any personal information you choose to share with us. This privacy policy outlines our practices regarding the collection, use, and disclosure of your information.
 
 ## 1. Information We Collect
 
