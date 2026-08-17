@@ -1,6 +1,6 @@
 import { SingleValue } from 'react-select';
 import { Coordinate, BuildingFloor, Location } from '../algorithm/types';
-import buildings from '../geojson/buildings.json';
+import { getBuildings } from '../campus-data/selectors';
 
 export type OptionType = {
 	value: string;
@@ -8,8 +8,7 @@ export type OptionType = {
 };
 
 export function getStartEndLocations() {
-    return new Map<string, Location>(buildings.features
-        .filter(feature => feature.properties.type == 'building')
+    return new Map<string, Location>(getBuildings()
         .map(building =>
         building.properties.building.floors.map(floor => {
             const buildingCode = building.properties.building.buildingCode;
@@ -23,8 +22,7 @@ export function getStartEndLocations() {
 
 export function getBuildingFloorOptions() {
     const map = new Map<string, string[]>();
-    buildings.features
-    .filter(feature => feature.properties.type == 'building')
+    getBuildings()
     .forEach(building => {
         const buildingCode = building.properties.building.buildingCode;
         map.set(buildingCode, (map.get(buildingCode) ?? []).concat(building.properties.building.floors));

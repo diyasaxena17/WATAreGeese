@@ -3,7 +3,7 @@ import Select, { SingleValue } from 'react-select';
 
 import './App.css';
 
-import geoJson from './geojson/paths.json';
+import { getRoutingGeoJson } from './campus-data/selectors';
 import { getStartEndLocations, getBuildingFloorOptions, getBuildingOptions, getFloorOptions, OptionType } from './map/locations';
 import { Dijkstra, AdjacencyList, Route, GraphLocation } from './algorithm/dijkstra';
 import displayRoute from './map/displayRoute';
@@ -15,7 +15,7 @@ import useBaseGeoJson from './hooks/useBaseGeoJson';
 
 
 function App() {
-	const UWMap = useMemo(() => new Dijkstra(new AdjacencyList(geoJson)), []);
+	const UWMap = useMemo(() => new Dijkstra(new AdjacencyList(getRoutingGeoJson())), []);
 	const { googleMap } = useLoadMap();
 	const { library: Markers } = useGoogleMapsLibrary("marker");
 
@@ -63,7 +63,7 @@ function App() {
 		}).element : undefined
 	), [endBuilding, endFloor, tunnellingPreference]);
 
-	useBaseGeoJson(googleMap, geoJson, hasRoute);
+	useBaseGeoJson(googleMap, hasRoute);
 
 
 	// update route on map
