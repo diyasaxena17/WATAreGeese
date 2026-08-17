@@ -1,5 +1,17 @@
 # React + TypeScript + Vite
 
+## Tests
+
+Run the routing regression suite with:
+
+```sh
+npm test
+```
+
+The tests exercise the inherited WATIsGrass routing engine through the public
+`Dijkstra.calculateRoute(...)` entry point using the checked-in campus GeoJSON
+data.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

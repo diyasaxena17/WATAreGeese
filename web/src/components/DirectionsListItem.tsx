@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
-import { Coordinate } from "../algorithm/dijkstra";
-import { GraphLocation } from "../algorithm/dijkstra";
+import { toDirectionsString } from "../routing/directions";
+import { Coordinate, GraphLocation } from "../routing/types";
 import formatPolyLine from "../map/formatPolyLine";
 import { GoogleMapsLibrary } from "../map/GoogleMapsLibrary";
 
@@ -44,7 +44,7 @@ export default function DirectionsListItem({ graphLocation, googleMap, order, on
         onMouseLeave={onlyHighlightOnHover ? () => highlightedSegment.forEach(segment => segment.setMap(null)) : undefined}>
         <div className="min-w-7">{`${order}.`}</div>
         <div>
-            {graphLocation.toDirectionsString()}
+            {toDirectionsString(graphLocation)}
         </div>
     </div>;
 }

@@ -1,6 +1,7 @@
 import { SingleValue } from 'react-select';
 import { Coordinate, BuildingFloor, Location } from '../algorithm/types';
-import buildings from '../geojson/buildings.json';
+import { getBuildingSearchDocuments } from '../campus-data/buildingSearch';
+import { getBuildings } from '../campus-data/selectors';
 
 export type OptionType = {
 	value: string;
@@ -8,8 +9,7 @@ export type OptionType = {
 };
 
 export function getStartEndLocations() {
-    return new Map<string, Location>(buildings.features
-        .filter(feature => feature.properties.type == 'building')
+    return new Map<string, Location>(getBuildings()
         .map(building =>
         building.properties.building.floors.map(floor => {
             const buildingCode = building.properties.building.buildingCode;
@@ -23,8 +23,7 @@ export function getStartEndLocations() {
 
 export function getBuildingFloorOptions() {
     const map = new Map<string, string[]>();
-    buildings.features
-    .filter(feature => feature.properties.type == 'building')
+    getBuildings()
     .forEach(building => {
         const buildingCode = building.properties.building.buildingCode;
         map.set(buildingCode, (map.get(buildingCode) ?? []).concat(building.properties.building.floors));
@@ -36,8 +35,10 @@ export function getBuildingFloorOptions() {
 // returns function to be passed into React.useMemo
 export function getBuildingOptions(buildingFloorOptions: Map<string, string[]>) {
     return () => {
+        const labelsByBuilding = new Map(getBuildingSearchDocuments()
+            .map(building => [building.buildingCode, building.label]));
         const arr = Array.from(buildingFloorOptions.keys())
-            .map(building => {return { value: building, label: building }});
+            .map(building => {return { value: building, label: labelsByBuilding.get(building) ?? building }});
         arr.sort((a, b) => a.value.localeCompare(b.value));
         return arr;
     }

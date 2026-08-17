@@ -1,0 +1,214 @@
+export class Coordinate {
+    readonly latitude: number;
+    readonly longitude: number;
+
+    constructor(arr: [number, number]) {
+        this.latitude = arr[1];
+        this.longitude = arr[0];
+    }
+
+    equals(other: Coordinate) {
+        return this.latitude == other.latitude && this.longitude == other.longitude;
+    }
+
+    toGoogleMapsCoordinate() {
+        return { lat: this.latitude, lng: this.longitude };
+    }
+
+    toArray(): [number, number] {
+        return [this.longitude, this.latitude];
+    }
+};
+
+export class BuildingFloor {
+    readonly buildingCode: string;
+    readonly floor: string;
+
+    constructor({ buildingCode, floor }: { buildingCode: string, floor: string }) {
+        this.buildingCode = buildingCode;
+        this.floor = floor;
+    }
+
+    equals(other: BuildingFloor) {
+        return this.buildingCode == other.buildingCode && this.floor == other.floor;
+    }
+
+    toString() {
+        return `${this.buildingCode}|${this.floor}`;
+    }
+
+    toDirectionString() {
+        return `${this.buildingCode} floor ${this.floor}`;
+    }
+};
+
+export class Location {
+    readonly coordinate: Coordinate;
+    readonly buildingFloor: BuildingFloor;
+
+    constructor(coordinate: Coordinate, buildingFloor: BuildingFloor) {
+        this.coordinate = coordinate;
+        this.buildingFloor = buildingFloor;
+    }
+
+    toString(): string {
+        return `${this.coordinate.latitude}|${this.coordinate.longitude}|` +
+            `${this.buildingFloor.buildingCode}|${this.buildingFloor.floor}`;
+    }
+
+    equals(other: Location) {
+        return this.coordinate.equals(other.coordinate) && this.buildingFloor.equals(other.buildingFloor);
+    }
+};
+
+export class Edge {
+    readonly start: Location;
+    readonly end: Location;
+    readonly length: number;
+    /**
+     *  Number of floors up/down (a signed integer)
+     */
+    readonly floorChange: number;
+    readonly type: string;
+    readonly coordinates: [number, number][];
+
+    constructor(start: Location, end: Location, length: number, floorChange: number, type: string, coordinates: [number, number][]) {
+        this.start = start;
+        this.end = end;
+        this.length = length;
+        this.floorChange = floorChange;
+        this.type = type;
+        this.coordinates = coordinates;
+    }
+};
+
+export class GraphLocation {
+    readonly location: Location;
+    /**
+     * the line path from prevLocation to location, as geoJSON
+     **/
+    readonly path: [number, number][];
+    readonly prevLocation: GraphLocation | null;
+    /**
+     * type of path to get from prevLocation to location
+     **/
+    readonly travelMode: string | null;
+    /**
+     * total distance travelled
+     **/
+    readonly distance: number;
+    /**
+     * total time elapsed in seconds
+     */
+    readonly time: number;
+    /**
+     * total time elapsed outside in seconds
+     */
+    readonly timeOutside: number;
+    /**
+     * num floors to go up/down to get from prevLocation to location (a signed integer)
+     **/
+    readonly floorChange: number;
+    /**
+     * total number of floors ascended
+     **/
+    readonly floorsAscended: number;
+    /**
+     * total number of floors descended (a nonnegative integer)
+     **/
+    readonly floorsDescended: number;
+
+    constructor(loc: Location, path: [number, number][],
+        prevLoc = null as GraphLocation | null,
+        travelMode = null as string | null,
+        dist = 0, time = 0, timeOutside = 0, floorChange = 0, floorsAsc = 0, floorsDesc = 0) {
+        this.location = loc;
+        this.path = path;
+        this.prevLocation = prevLoc;
+        this.travelMode = travelMode;
+        this.distance = dist;
+        this.time = time;
+        this.timeOutside = timeOutside;
+        console.assert(timeOutside <= time);
+        this.floorChange = floorChange;
+        this.floorsAscended = floorsAsc;
+        this.floorsDescended = floorsDesc;
+    }
+};
+
+export class Route {
+    readonly graphLocations: GraphLocation[];
+
+    constructor(graphLocations: GraphLocation[]) {
+        this.graphLocations = graphLocations;
+    }
+};
+
+export type GeoJsonBuildingOutline = {
+    type: 'Feature',
+    properties: {
+        type: 'building-outline',
+        default: BuildingFloor
+    }
+    geometry: {
+        coordinates: [number, number][][],
+        type: 'Polygon'
+    }
+};
+export type GeoJsonLine = {
+    type: 'Feature',
+    properties: {
+        type: 'hallway' | 'bridge' | 'tunnel' | 'walkway',
+        start: BuildingFloor,
+        end: BuildingFloor
+    },
+    geometry: {
+        coordinates: [number, number][],
+        type: 'LineString'
+    }
+};
+export type GeoJsonStairs = {
+    type: 'Feature',
+    properties: {
+        type: 'stairs',
+        connections: {
+            buildingCode: string,
+            floor: string,
+            level: number
+        }[]
+    },
+    geometry: {
+        coordinates: [number, number],
+        type: 'Point'
+    }
+};
+export type GeoJsonDoorOrOpen = {
+    type: 'Feature',
+    properties: {
+        type: 'door' | 'open',
+        start: BuildingFloor,
+        end: BuildingFloor
+    },
+    geometry: {
+        coordinates: [number, number],
+        type: 'Point'
+    }
+};
+export type GeoJsonBuilding = {
+    type: 'Feature',
+    properties: {
+        type: 'building',
+        building: {
+            buildingCode: string,
+            floors: string[]
+        }
+    }
+    geometry: {
+        coordinates: [number, number],
+        type: 'Point'
+    }
+};
+export type GeoJson = {
+    features: (GeoJsonBuildingOutline | GeoJsonLine | GeoJsonStairs | GeoJsonDoorOrOpen)[],
+    type: 'FeatureCollection'
+};
