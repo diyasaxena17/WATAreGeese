@@ -1,4 +1,4 @@
-import { FormEvent, useState, useEffect, useMemo } from 'react';
+import { FormEvent, PointerEvent, useState, useEffect, useMemo, useRef } from 'react';
 
 import { BuildingSearchResult } from '../campus-data/buildingSearch';
 import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../map/locations';
@@ -29,6 +29,7 @@ export default function HomePage() {
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
 	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
+	const sheetDragStartY = useRef<number | null>(null);
 	const mapRenderer = useMapRenderer();
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
@@ -126,6 +127,18 @@ export default function HomePage() {
 		/>
 	);
 
+	const handleSheetDragStart = (event: PointerEvent<HTMLButtonElement>) => {
+		sheetDragStartY.current = event.clientY;
+		event.currentTarget.setPointerCapture?.(event.pointerId);
+	};
+
+	const handleSheetDragEnd = (event: PointerEvent<HTMLButtonElement>) => {
+		if(sheetDragStartY.current != null && event.clientY - sheetDragStartY.current > 80) {
+			setIsMobileSheetMinimized(true);
+		}
+		sheetDragStartY.current = null;
+	};
+
 	return (
 		<AppShell
 			map={mapRenderer.mapElement}
@@ -163,16 +176,15 @@ export default function HomePage() {
 				</div>
 			) : (
 				<Sheet
+					handleLabel="Drag route planner down to minimize"
+					onHandlePointerDown={handleSheetDragStart}
+					onHandlePointerUp={handleSheetDragEnd}
+					onHandlePointerCancel={() => {
+						sheetDragStartY.current = null;
+					}}
 					header={
-						<div className="flex items-start justify-between gap-3">
+						<div>
 							<SectionHeader title="WATAreGeese 🪿" description="Waterloo, without the outside." />
-							<Button
-								variant="ghost"
-								className="min-h-0 px-3 py-1.5"
-								onClick={() => setIsMobileSheetMinimized(true)}
-							>
-								Minimize
-							</Button>
 						</div>
 					}
 				>
