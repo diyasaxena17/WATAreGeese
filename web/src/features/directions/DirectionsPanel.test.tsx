@@ -18,6 +18,13 @@ function makeRoute() {
     return new Route([start, end]);
 }
 
+function makeMultiStepRoute() {
+    const start = new GraphLocation(makeLocation('DC'), [], null, null, 0, 0, 0, 0, 0, 0);
+    const middle = new GraphLocation(makeLocation('MC'), [[-80.543, 43.472]], start, 'hallway', 120, 90, 0, 0, 0, 0);
+    const end = new GraphLocation(makeLocation('E7'), [[-80.544, 43.473]], middle, 'bridge', 650, 480, 0, 0, 1, 0);
+    return new Route([start, middle, end]);
+}
+
 describe('DirectionsPanel', () => {
     it('renders route summary and direction steps from route data', () => {
         const route = makeRoute();
@@ -42,6 +49,26 @@ describe('DirectionsPanel', () => {
         expect(screen.getByText('Directions')).toBeInTheDocument();
         expect(screen.getByText(/Take the hallway on E7 floor 1/i)).toBeInTheDocument();
         expect(screen.getByText('hallway')).toBeInTheDocument();
+    });
+
+    it('renders directions in route order', () => {
+        render(
+            <DirectionsPanel
+                variant="desktop"
+                route={makeMultiStepRoute()}
+                selectedDirection={null}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={vi.fn()}
+                onSelectDirection={vi.fn()}
+            />
+        );
+
+        const rows = screen.getAllByRole('button');
+
+        expect(rows[0]).toHaveTextContent('1');
+        expect(rows[0]).toHaveTextContent('Take the hallway on MC floor 1');
+        expect(rows[1]).toHaveTextContent('2');
+        expect(rows[1]).toHaveTextContent('Take the bridge to E7 floor 1');
     });
 
     it('renders the no-route state', () => {
@@ -83,6 +110,8 @@ describe('DirectionsPanel', () => {
         expect(onHighlightDirection).toHaveBeenCalledWith(1);
         expect(onSelectDirection).toHaveBeenCalledWith(1);
         expect(onClearHighlight).toHaveBeenCalledTimes(1);
+        expect(step).toHaveAttribute('aria-current', 'step');
+        expect(step).toHaveTextContent('Selected');
     });
 
     it('keeps inherited route summary formatting stable', () => {

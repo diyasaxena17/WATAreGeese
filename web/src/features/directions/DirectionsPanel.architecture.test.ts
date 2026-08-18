@@ -19,6 +19,8 @@ describe('directions presentation boundary', () => {
 
         expect(source).not.toContain('../../routing/dijkstra');
         expect(source).not.toContain('../../routing/graph');
+        expect(source).not.toContain('new Dijkstra');
+        expect(source).not.toContain('new AdjacencyList');
         expect(source).not.toContain('buildings.json');
         expect(source).not.toContain('paths.json');
         expect(source).not.toContain('leaflet');

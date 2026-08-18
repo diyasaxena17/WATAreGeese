@@ -44,7 +44,7 @@ export default function DirectionsListItem({
                 <span className="block text-wg-body text-text-primary">{instruction}</span>
                 {travelMode ? (
                     <span className="mt-1 block text-wg-label capitalize text-text-secondary">
-                        {travelMode}
+                        {travelMode}{isSelected ? ' · Selected' : ''}
                     </span>
                 ) : null}
             </span>
