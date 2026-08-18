@@ -12,4 +12,17 @@ describe('HomePage routing boundary', () => {
 		expect(source).not.toContain('new AdjacencyList');
 		expect(source).not.toContain('getRoutingGeoJson');
 	});
+
+	it('uses the map renderer boundary instead of Google map APIs directly', () => {
+		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
+
+		expect(source).toContain("import { useMapRenderer } from '../map-rendering'");
+		expect(source).toContain('useMapRenderer(hasRoute)');
+		expect(source).not.toContain('google.maps');
+		expect(source).not.toContain('useLoadMap');
+		expect(source).not.toContain('useGoogleMapsLibrary');
+		expect(source).not.toContain('useBaseGeoJson');
+		expect(source).not.toContain("from '../map/displayRoute'");
+		expect(source).not.toContain("from '../map/updateLocation'");
+	});
 });
