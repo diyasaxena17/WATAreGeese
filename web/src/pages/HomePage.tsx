@@ -2,12 +2,13 @@ import { FormEvent, PointerEvent, useState, useEffect, useMemo, useRef } from 'r
 
 import { BuildingSearchResult } from '../campus-data/buildingSearch';
 import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../map/locations';
-import { Route, GraphLocation } from '../algorithm/dijkstra';
+import { Route } from '../algorithm/dijkstra';
 import AppShell from '../components/layout/AppShell';
 import Button from '../components/ui/Button';
 import Panel from '../components/ui/Panel';
 import Sheet from '../components/ui/Sheet';
 import SectionHeader from '../components/ui/SectionHeader';
+import DirectionsPanel from '../features/directions/DirectionsPanel';
 import RouteForm from '../features/navigation/RouteForm';
 import { NavigationService } from '../features/navigation/navigationService';
 import { useMapRenderer } from '../map-rendering';
@@ -204,65 +205,24 @@ export default function HomePage() {
 			)}
 		>
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ?
-				<div
-					id="mobile-directions"
-					className="z-20 visible md:invisible absolute top-[16%] w-[90%] bg-gray-200/85 py-1 shadow-2xl">
-					{route != null ? <>
-						<div className="pb-2">
-							{statsString(route).map(str =>
-								<div>{str}</div>
-							)}
-						</div>
-						<div className="flex flex-row">
-							<button
-								className="px-1 text-xl"
-								onClick={() => setCurrentDirection(Math.max(currentDirection-1, 1))}>{"◀️"}
-							</button>
-							<div className="grow">
-								{mapRenderer.renderDirectionItem({
-									graphLocation: route.graphLocations[currentDirection],
-									order: currentDirection,
-									onlyHighlightOnHover: false
-								})}
-							</div>
-							<button
-								className="px-1 text-xl"
-								onClick={() => setCurrentDirection(Math.min(currentDirection+1, route.graphLocations.length-1))}>{"▶️"}
-							</button>
-						</div>
-					</> : 'No routes found :('}
-				</div>
+				<DirectionsPanel
+					variant="mobile"
+					route={route}
+					currentDirection={currentDirection}
+					onPreviousDirection={() => setCurrentDirection(Math.max(currentDirection-1, 1))}
+					onNextDirection={() => setCurrentDirection(Math.min(currentDirection+1, route?.graphLocations.length ? route.graphLocations.length-1 : 1))}
+					renderDirectionItem={mapRenderer.renderDirectionItem}
+				/>
 			: ''}
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ?
-				<div
-					id="directions"
-					className="z-20 invisible md:visible absolute left-[2%] w-auto top-[25%] max-h-[20%] md:max-h-[65%] overflow-y-auto p-4 bg-gray-200/85 shadow-2xl">
-					{route != null ? <>
-						<div className="pb-2">
-							{statsString(route).map(str =>
-								<div>{str}</div>
-							)}
-						</div>
-						{route.graphLocations.slice(1).map((graphLocation, idx) =>
-							mapRenderer.renderDirectionItem({
-								graphLocation,
-								order: idx + 1,
-								onlyHighlightOnHover: true
-							}))}
-					</> : 'No routes found :('}
-				</div>
+				<DirectionsPanel
+					variant="desktop"
+					route={route}
+					renderDirectionItem={mapRenderer.renderDirectionItem}
+				/>
 			: ''}
 		</AppShell>
 	);
-}
-
-function statsString(route: Route) {
-	const end = route.graphLocations.at(-1) as GraphLocation;
-	const time = Math.round(end.time / 60);
-	return [
-		`Time: ${time == 0 ? '<1' : time}min, Distance: ${Math.round(end.distance ?? 0).toLocaleString()}m`,
-		`⬆️${end.floorsAscended} floors, ⬇️ ${end.floorsDescended} floors`
-	];
 }
 
 function toBuildingOption(building: BuildingSearchResult | null): OptionType | null {
