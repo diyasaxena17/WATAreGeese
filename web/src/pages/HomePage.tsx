@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
-import { SingleValue } from 'react-select';
+import { FormEvent, useState, useEffect, useMemo } from 'react';
 
-import { getRoutingGeoJson } from '../campus-data/selectors';
-import { getStartEndLocations, getBuildingFloorOptions, getBuildingOptions, getFloorOptions, OptionType } from '../map/locations';
-import { Dijkstra, AdjacencyList, Route, GraphLocation } from '../algorithm/dijkstra';
+import { BuildingSearchResult } from '../campus-data/buildingSearch';
+import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../map/locations';
+import { Route, GraphLocation } from '../algorithm/dijkstra';
 import displayRoute from '../map/displayRoute';
 import useLoadMap from '../map/loadMap';
 import useGoogleMapsLibrary from '../hooks/useGoogleMapsLibrary';
@@ -16,22 +15,20 @@ import Panel from '../components/ui/Panel';
 import Sheet from '../components/ui/Sheet';
 import SectionHeader from '../components/ui/SectionHeader';
 import RouteForm from '../features/navigation/RouteForm';
+import { NavigationService } from '../features/navigation/navigationService';
 
 export default function HomePage() {
-	const UWMap = useMemo(() => new Dijkstra(new AdjacencyList(getRoutingGeoJson())), []);
+	const navigationService = useMemo(() => new NavigationService(), []);
 	const { googleMap } = useLoadMap();
 	const { library: Markers } = useGoogleMapsLibrary("marker");
 
-	const startEndLocations = useMemo(getStartEndLocations, []);
-	const buildingFloorOptions = useMemo(getBuildingFloorOptions, []);
+	const startEndLocations = useMemo(() => getStartEndLocations(), []);
+	const buildingFloorOptions = useMemo(() => getBuildingFloorOptions(), []);
 
-	const [startBuilding, setStartBuilding] = useState<SingleValue<OptionType>>(null);
-	const [startFloor, setStartFloor] = useState<SingleValue<OptionType>>(null);
+	const [startBuilding, setStartBuilding] = useState<BuildingSearchResult | null>(null);
 	const [startLocationMarker, setStartLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | null>(null);
-	const [endBuilding, setEndBuilding] = useState<SingleValue<OptionType>>(null);
-	const [endFloor, setEndFloor] = useState<SingleValue<OptionType>>(null);
+	const [endBuilding, setEndBuilding] = useState<BuildingSearchResult | null>(null);
 	const [endLocationMarker, endStartLocationMarker] = useState<google.maps.marker.AdvancedMarkerElement | null>(null);
-	const [tunnellingPreference, setTunnellingPreference] = useState<OptionType>(Dijkstra.COMPARATOR_OPTIONS[0]);
 
 	const [hasRoute, setHasRoute] = useState(false);
 	const [route, setRoute] = useState<Route | null>(null);
@@ -42,75 +39,69 @@ export default function HomePage() {
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
 
-	const buildingOptions = useMemo(getBuildingOptions(buildingFloorOptions), []);
-	const startFloorOptions = useMemo(getFloorOptions(buildingFloorOptions, startBuilding), [startBuilding]);
-	const endFloorOptions = useMemo(getFloorOptions(buildingFloorOptions, endBuilding), [endBuilding]);
+	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
+	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
+	const startFloorOption = useMemo(() => toFloorOption(startBuilding, buildingFloorOptions), [startBuilding, buildingFloorOptions]);
+	const endFloorOption = useMemo(() => toFloorOption(endBuilding, buildingFloorOptions), [endBuilding, buildingFloorOptions]);
 
-	const startLocation = useMemo(updateLocation(
-		startBuilding, startFloor, startEndLocations, startLocationMarker, setStartLocationMarker, route, setRoute,
+	const startLocation = useMemo(() => updateLocation(
+		startBuildingOption, startFloorOption, startEndLocations, startLocationMarker, setStartLocationMarker, route, setRoute,
 		routeClear, setRouteClear, setHasRoute, googleMap, Markers
-	), [startBuilding, startFloor, tunnellingPreference]);
-	const endLocation = useMemo(updateLocation(
-		endBuilding, endFloor, startEndLocations, endLocationMarker, endStartLocationMarker, route, setRoute,
-		routeClear, setRouteClear, setHasRoute, googleMap, Markers,
-		Markers ? new Markers.PinElement({
-			background: '#009933',
-			borderColor: '#196619',
-			glyphColor: '#196619'
-		}).element : undefined
-	), [endBuilding, endFloor, tunnellingPreference]);
+	)(), [
+		startBuildingOption, startFloorOption, startEndLocations, startLocationMarker, route,
+		routeClear, googleMap, Markers
+	]);
+	const endMarkerContent = useMemo(() => Markers ? new Markers.PinElement({
+		background: '#009933',
+		borderColor: '#196619',
+		glyphColor: '#196619'
+	}).element : undefined, [Markers]);
+	const endLocation = useMemo(() => updateLocation(
+		endBuildingOption, endFloorOption, startEndLocations, endLocationMarker, endStartLocationMarker, route, setRoute,
+		routeClear, setRouteClear, setHasRoute, googleMap, Markers, endMarkerContent
+	)(), [
+		endBuildingOption, endFloorOption, startEndLocations, endLocationMarker, route,
+		routeClear, googleMap, Markers, endMarkerContent
+	]);
 
 	useBaseGeoJson(googleMap, hasRoute);
 
 	useEffect(() => {
 		if (hasRoute) {
 			console.log(route?.graphLocations);
-			routeClear();
-			setRouteClear(displayRoute(googleMap, route));
+			setRouteClear((clearPreviousRoute) => {
+				clearPreviousRoute();
+				return displayRoute(googleMap, route);
+			});
 			setCurrentDirection(1);
 		} else {
 			setCurrentDirection(0);
 		}
-	}, [route, hasRoute]);
+	}, [googleMap, route, hasRoute]);
 
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (googleMap && startLocation && endLocation) {
 			console.log(`Start: ${startLocation.toString()}, End: ${endLocation.toString()}`);
-			setRoute(UWMap.calculateRoute(startLocation, endLocation, Dijkstra.COMPARATORS.get(tunnellingPreference.value)));
+			setRoute(navigationService.calculateRoute({ start: startLocation, end: endLocation }).route);
 			setHasRoute(true);
 			setShowDirections(true);
 			setShowInput(false);
 		}
 	};
 
-	const handleStartBuildingChange = (newVal: SingleValue<OptionType>) => {
-		setStartBuilding(newVal);
-		setStartFloor(null);
+	const handleSwapLocations = () => {
+		setStartBuilding(endBuilding);
+		setEndBuilding(startBuilding);
 	};
 
-	const handleEndBuildingChange = (newVal: SingleValue<OptionType>) => {
-		setEndBuilding(newVal);
-		setEndFloor(null);
-	};
-
-	const form = (
+	const renderForm = () => (
 		<RouteForm
-			buildingOptions={buildingOptions}
-			startFloorOptions={startFloorOptions}
-			endFloorOptions={endFloorOptions}
-			startBuilding={startBuilding}
-			startFloor={startFloor}
-			endBuilding={endBuilding}
-			endFloor={endFloor}
-			tunnellingPreference={tunnellingPreference}
-			onStartBuildingChange={handleStartBuildingChange}
-			onStartFloorChange={setStartFloor}
-			onEndBuildingChange={handleEndBuildingChange}
-			onEndFloorChange={setEndFloor}
-			onTunnellingPreferenceChange={newVal => {
-				if(newVal) setTunnellingPreference(newVal);
-			}}
+			from={startBuilding}
+			to={endBuilding}
+			onFromChange={setStartBuilding}
+			onToChange={setEndBuilding}
+			onSwap={handleSwapLocations}
 			onSubmit={handleSubmit}
 		/>
 	);
@@ -122,10 +113,16 @@ export default function HomePage() {
 				<Panel className="m-4 shadow-none">
 					<div className="space-y-4">
 						<SectionHeader
-							title="WATAreGeese"
-							description="Find indoor routes through Waterloo tunnels and bridges."
+							title="WATAreGeese 🪿"
+							description="Waterloo, without the outside."
 						/>
-						{form}
+						{renderForm()}
+						<a
+							className="wg-body-secondary inline-flex underline decoration-border underline-offset-4 hover:text-text-primary"
+							href="https://github.com/diyasaxena17/WATAreGeese"
+						>
+							About / credits
+						</a>
 						{hasRoute ? (
 							<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
 								{showDirections ? 'Hide directions' : 'Show directions'}
@@ -135,9 +132,9 @@ export default function HomePage() {
 				</Panel>
 			}
 			sheet={
-				<Sheet header={<SectionHeader title="WATAreGeese" description="Waterloo indoor routing" />}>
+				<Sheet header={<SectionHeader title="WATAreGeese 🪿" description="Waterloo, without the outside." />}>
 					<div className="space-y-4">
-						{showInput ? form : (
+						{showInput ? renderForm() : (
 							<Button variant="secondary" className="w-full" onClick={() => setShowInput(true)}>
 								Show input
 							</Button>
@@ -203,4 +200,20 @@ function statsString(route: Route) {
 		`Time: ${time == 0 ? '<1' : time}min, Distance: ${Math.round(end.distance ?? 0).toLocaleString()}m`,
 		`⬆️${end.floorsAscended} floors, ⬇️ ${end.floorsDescended} floors`
 	];
+}
+
+function toBuildingOption(building: BuildingSearchResult | null): OptionType | null {
+	if(!building) return null;
+	return { value: building.buildingCode, label: building.label };
+}
+
+function toFloorOption(building: BuildingSearchResult | null, buildingFloorOptions: Map<string, string[]>): OptionType | null {
+	if(!building) return null;
+	const floor = defaultFloor(buildingFloorOptions.get(building.buildingCode) ?? building.floors);
+	if(!floor) return null;
+	return { value: floor, label: floor };
+}
+
+function defaultFloor(floors: string[]) {
+	return floors.includes('1') ? '1' : floors[0] ?? null;
 }

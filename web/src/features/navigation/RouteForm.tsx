@@ -1,108 +1,106 @@
-import Select, { SingleValue } from 'react-select';
+import { FormEvent, useId, useMemo, useState } from 'react';
 
-import { Dijkstra } from '../../algorithm/dijkstra';
-import { OptionType } from '../../map/locations';
+import { BuildingSearchResult, searchBuildings } from '../../campus-data/buildingSearch';
 import Button from '../../components/ui/Button';
+import IconButton from '../../components/ui/IconButton';
+import LocationField from '../../components/ui/LocationField';
+import SearchInput from '../../components/ui/SearchInput';
+
+export type RouteEndpoint = 'from' | 'to';
 
 export type RouteFormProps = {
-	buildingOptions: OptionType[];
-	startFloorOptions: OptionType[];
-	endFloorOptions: OptionType[];
-	startBuilding: SingleValue<OptionType>;
-	startFloor: SingleValue<OptionType>;
-	endBuilding: SingleValue<OptionType>;
-	endFloor: SingleValue<OptionType>;
-	tunnellingPreference: OptionType;
-	onStartBuildingChange: (value: SingleValue<OptionType>) => void;
-	onStartFloorChange: (value: SingleValue<OptionType>) => void;
-	onEndBuildingChange: (value: SingleValue<OptionType>) => void;
-	onEndFloorChange: (value: SingleValue<OptionType>) => void;
-	onTunnellingPreferenceChange: (value: SingleValue<OptionType>) => void;
-	onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+	from: BuildingSearchResult | null;
+	to: BuildingSearchResult | null;
+	onFromChange: (building: BuildingSearchResult) => void;
+	onToChange: (building: BuildingSearchResult) => void;
+	onSwap: () => void;
+	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 export default function RouteForm({
-	buildingOptions,
-	startFloorOptions,
-	endFloorOptions,
-	startBuilding,
-	startFloor,
-	endBuilding,
-	endFloor,
-	tunnellingPreference,
-	onStartBuildingChange,
-	onStartFloorChange,
-	onEndBuildingChange,
-	onEndFloorChange,
-	onTunnellingPreferenceChange,
+	from,
+	to,
+	onFromChange,
+	onToChange,
+	onSwap,
 	onSubmit
 }: RouteFormProps) {
+	const id = useId();
+	const [activeEndpoint, setActiveEndpoint] = useState<RouteEndpoint>('from');
+	const [query, setQuery] = useState('');
+	const results = useMemo(() => searchBuildings(query).slice(0, 6), [query]);
+	const activeLabel = activeEndpoint == 'from' ? 'starting point' : 'destination';
+
+	const selectBuilding = (building: BuildingSearchResult) => {
+		if(activeEndpoint == 'from') onFromChange(building);
+		else onToChange(building);
+		setQuery('');
+		setActiveEndpoint(activeEndpoint == 'from' ? 'to' : 'from');
+	};
+
 	return (
-		<form className="space-y-3" onSubmit={onSubmit}>
-			<div className="space-y-1.5">
-				<label htmlFor="start-building" className="wg-label">Start Building</label>
-				<Select
-					id="start-building"
-					name="start-building"
-					options={buildingOptions}
-					className="react-select-container"
-					classNamePrefix="react-select"
-					value={startBuilding}
-					onChange={onStartBuildingChange}
+		<form className="space-y-4" onSubmit={onSubmit}>
+			<div className="space-y-2">
+				<LocationField
+					label="From"
+					state={from ? 'selected' : 'empty'}
+					primaryText={from?.buildingCode ?? 'Choose starting point'}
+					secondaryText={from?.officialName}
+					onClick={() => setActiveEndpoint('from')}
+				/>
+				<div className="flex justify-center">
+					<IconButton
+						aria-label="Swap start and destination"
+						icon="⇅"
+						onClick={onSwap}
+						disabled={!from && !to}
+					/>
+				</div>
+				<LocationField
+					label="To"
+					state={to ? 'selected' : 'empty'}
+					primaryText={to?.buildingCode ?? 'Choose destination'}
+					secondaryText={to?.officialName}
+					onClick={() => setActiveEndpoint('to')}
 				/>
 			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="start-floor" className="wg-label">Start Floor</label>
-				<Select
-					id="start-floor"
-					name="start-floor"
-					options={startFloorOptions}
-					className="react-select-container"
-					classNamePrefix="react-select"
-					value={startFloor}
-					onChange={onStartFloorChange}
+
+			<div className="space-y-2">
+				<SearchInput
+					id={`${id}-${activeEndpoint}-search`}
+					label={`Search ${activeLabel}`}
+					placeholder={`Search ${activeLabel}`}
+					value={query}
+					onChange={setQuery}
 				/>
+				{query.trim().length > 0 ? (
+					<div className="max-h-56 overflow-y-auto rounded-panel border border-border bg-surface">
+						{results.length > 0 ? results.map(building => (
+							<button
+								key={building.id}
+								type="button"
+								className="flex min-h-touch w-full items-center gap-3 border-b border-border px-3 py-2 text-left last:border-b-0 hover:bg-surface-raised focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-focus-ring"
+								onClick={() => selectBuilding(building)}
+							>
+								<span className="wg-building-code w-12 shrink-0">{building.buildingCode}</span>
+								<span className="min-w-0">
+									<span className="block truncate text-wg-body text-text-primary">{building.officialName}</span>
+									{building.aliases.length > 0 ? (
+										<span className="block truncate text-wg-body-secondary">{building.aliases.join(', ')}</span>
+									) : null}
+								</span>
+							</button>
+						)) : (
+							<div className="wg-body-secondary px-3 py-3">No matching buildings</div>
+						)}
+					</div>
+				) : null}
 			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="end-building" className="wg-label">End Building</label>
-				<Select
-					id="end-building"
-					name="end-building"
-					options={buildingOptions}
-					className="react-select-container"
-					classNamePrefix="react-select"
-					value={endBuilding}
-					onChange={onEndBuildingChange}
-				/>
-			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="end-floor" className="wg-label">End Floor</label>
-				<Select
-					id="end-floor"
-					name="end-floor"
-					options={endFloorOptions}
-					className="react-select-container"
-					classNamePrefix="react-select"
-					value={endFloor}
-					onChange={onEndFloorChange}
-				/>
-			</div>
-			<div className="space-y-1.5">
-				<label htmlFor="tunnelling-preference" className="wg-label">Tunnelling Preference</label>
-				<Select
-					id="tunnelling-preference"
-					name="tunnelling-preference"
-					options={Dijkstra.COMPARATOR_OPTIONS}
-					className="react-select-container"
-					classNamePrefix="react-select"
-					value={tunnellingPreference}
-					onChange={onTunnellingPreferenceChange}
-				/>
-			</div>
+
 			<Button
 				type="submit"
 				className="w-full"
-				disabled={!startBuilding || !startFloor || !endBuilding || !endFloor}
+				disabled={!from || !to}
 			>
 				Find route
 			</Button>
