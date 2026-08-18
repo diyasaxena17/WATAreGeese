@@ -32,6 +32,7 @@ describe('RouteForm', () => {
 		const user = userEvent.setup();
 		const props = renderRouteForm();
 
+		await user.click(screen.getByRole('button', { name: /fromchoose starting point/i }));
 		await user.type(screen.getByRole('searchbox', { name: /search starting point/i }), 'Davis');
 		await user.click(screen.getByRole('button', { name: /dcwilliam g\. davis/i }));
 
@@ -40,6 +41,7 @@ describe('RouteForm', () => {
 			buildingCode: 'DC'
 		}));
 		expect(props.onToChange).not.toHaveBeenCalled();
+		expect(screen.queryByRole('searchbox', { name: /search starting point/i })).not.toBeInTheDocument();
 	});
 
 	it('searches buildings by official name and selects To after From is selected', async () => {
@@ -55,6 +57,53 @@ describe('RouteForm', () => {
 		expect(props.onToChange).toHaveBeenCalledWith(expect.objectContaining({
 			id: 'E7',
 			buildingCode: 'E7'
+		}));
+	});
+
+	it('shows a useful building list before the query is typed', async () => {
+		const user = userEvent.setup();
+		renderRouteForm();
+
+		await user.click(screen.getByRole('button', { name: /fromchoose starting point/i }));
+
+		expect(screen.getByRole('searchbox', { name: /search starting point/i })).toHaveFocus();
+		expect(screen.getByRole('button', { name: /dcwilliam g\. davis/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /current locationcoming soon/i })).toBeDisabled();
+	});
+
+	it('shows a no-results state for irrelevant queries', async () => {
+		const user = userEvent.setup();
+		renderRouteForm();
+
+		await user.click(screen.getByRole('button', { name: /fromchoose starting point/i }));
+		await user.type(screen.getByRole('searchbox', { name: /search starting point/i }), 'not a waterloo building');
+
+		expect(screen.getByText('No buildings found.')).toBeInTheDocument();
+	});
+
+	it('closes the search surface with Escape', async () => {
+		const user = userEvent.setup();
+		renderRouteForm();
+
+		await user.click(screen.getByRole('button', { name: /fromchoose starting point/i }));
+		await user.keyboard('{Escape}');
+
+		expect(screen.queryByRole('searchbox', { name: /search starting point/i })).not.toBeInTheDocument();
+	});
+
+	it('supports keyboard navigation and Enter selection', async () => {
+		const user = userEvent.setup();
+		const props = renderRouteForm();
+
+		await user.click(screen.getByRole('button', { name: /fromchoose starting point/i }));
+		await user.type(screen.getByRole('searchbox', { name: /search starting point/i }), 'DC');
+		await user.keyboard('{Tab}');
+		await user.keyboard('{Tab}');
+		await user.keyboard('{Enter}');
+
+		expect(props.onFromChange).toHaveBeenCalledWith(expect.objectContaining({
+			id: 'DC',
+			buildingCode: 'DC'
 		}));
 	});
 
