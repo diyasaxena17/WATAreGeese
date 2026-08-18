@@ -42,13 +42,13 @@ export default function AppShell({
                 <div className="absolute inset-0">{map}</div>
 
                 {mapControls ? (
-                    <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 sm:right-4 sm:top-4 lg:right-5 lg:top-5">
+                    <div className="absolute right-3 top-3 z-[1100] flex flex-col gap-2 sm:right-4 sm:top-4 lg:right-5 lg:top-5">
                         {mapControls}
                     </div>
                 ) : null}
 
                 {sheet ? (
-                    <div className="absolute inset-x-0 bottom-0 z-30 max-h-[88svh] px-2 pb-2 sm:px-4 sm:pb-4 lg:hidden">
+                    <div className="absolute inset-x-0 bottom-0 z-[1100] max-h-[88svh] px-2 pb-2 sm:px-4 sm:pb-4 lg:hidden">
                         {sheet}
                     </div>
                 ) : null}
