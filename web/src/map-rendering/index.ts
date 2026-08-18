@@ -1,4 +1,4 @@
-export { useGoogleMapRenderer as useMapRenderer } from './google/GoogleMapRenderer';
+export { useLeafletMapRenderer as useMapRenderer } from './leaflet/LeafletMapRenderer';
 export type {
 	DirectionItemRequest,
 	MapLocationSyncRequest,

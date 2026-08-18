@@ -28,7 +28,7 @@ export default function HomePage() {
 
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
-	const mapRenderer = useMapRenderer(hasRoute);
+	const mapRenderer = useMapRenderer();
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
