@@ -62,7 +62,9 @@ export default function LocationSearchSurface({
 
 		if(event.key == 'ArrowDown') {
 			event.preventDefault();
-			const nextIndex = Math.min(activeIndex + 1, results.length - 1);
+			const nextIndex = document.activeElement == inputRef.current
+				? 0
+				: Math.min(activeIndex + 1, results.length - 1);
 			setActiveIndex(nextIndex);
 			resultRefs.current[nextIndex]?.focus();
 		}

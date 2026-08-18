@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 
 import { BuildingSearchResult } from '../../campus-data/buildingSearch';
 import Button from '../../components/ui/Button';
@@ -26,18 +26,30 @@ export default function RouteForm({
 	onSubmit
 }: RouteFormProps) {
 	const [activeEndpoint, setActiveEndpoint] = useState<RouteEndpoint | null>(null);
+	const fromFieldRef = useRef<HTMLButtonElement>(null);
+	const toFieldRef = useRef<HTMLButtonElement>(null);
 	const activeLabel = activeEndpoint == 'from' ? 'Starting point' : 'Destination';
+
+	const closeSearch = () => {
+		const endpoint = activeEndpoint;
+		setActiveEndpoint(null);
+		window.requestAnimationFrame(() => {
+			if(endpoint == 'from') fromFieldRef.current?.focus();
+			if(endpoint == 'to') toFieldRef.current?.focus();
+		});
+	};
 
 	const selectBuilding = (building: BuildingSearchResult) => {
 		if(activeEndpoint == 'from') onFromChange(building);
 		else onToChange(building);
-		setActiveEndpoint(null);
+		closeSearch();
 	};
 
 	return (
 		<form className="relative space-y-4" onSubmit={onSubmit}>
 			<div className="space-y-2">
 				<LocationField
+					ref={fromFieldRef}
 					label="From"
 					state={from ? 'selected' : 'empty'}
 					primaryText={from?.buildingCode ?? 'Choose starting point'}
@@ -53,6 +65,7 @@ export default function RouteForm({
 					/>
 				</div>
 				<LocationField
+					ref={toFieldRef}
 					label="To"
 					state={to ? 'selected' : 'empty'}
 					primaryText={to?.buildingCode ?? 'Choose destination'}
@@ -74,7 +87,7 @@ export default function RouteForm({
 					<LocationSearchSurface
 						label={activeLabel}
 						onSelect={selectBuilding}
-						onClose={() => setActiveEndpoint(null)}
+						onClose={closeSearch}
 					/>
 				</div>
 			) : null}
