@@ -6,6 +6,7 @@ export type AppShellProps = HTMLAttributes<HTMLDivElement> & {
     panel?: ReactNode;
     sheet?: ReactNode;
     mapControls?: ReactNode;
+    children?: ReactNode;
 };
 
 export default function AppShell({
@@ -13,6 +14,7 @@ export default function AppShell({
     panel,
     sheet,
     mapControls,
+    children,
     className,
     ...props
 }: AppShellProps) {
@@ -50,6 +52,8 @@ export default function AppShell({
                         {sheet}
                     </div>
                 ) : null}
+
+                {children}
             </main>
         </div>
     );
