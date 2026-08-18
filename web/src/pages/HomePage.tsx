@@ -28,6 +28,7 @@ export default function HomePage() {
 
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
+	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
 	const mapRenderer = useMapRenderer();
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
@@ -150,8 +151,31 @@ export default function HomePage() {
 					</div>
 				</Panel>
 			}
-			sheet={
-				<Sheet header={<SectionHeader title="WATAreGeese 🪿" description="Waterloo, without the outside." />}>
+			sheet={isMobileSheetMinimized ? (
+				<div className="rounded-panel border border-border bg-surface p-2 shadow-panel">
+					<Button
+						variant="secondary"
+						className="w-full justify-between"
+						onClick={() => setIsMobileSheetMinimized(false)}
+					>
+						{startBuilding && endBuilding ? `${startBuilding.buildingCode} to ${endBuilding.buildingCode}` : 'Plan route'}
+					</Button>
+				</div>
+			) : (
+				<Sheet
+					header={
+						<div className="flex items-start justify-between gap-3">
+							<SectionHeader title="WATAreGeese 🪿" description="Waterloo, without the outside." />
+							<Button
+								variant="ghost"
+								className="min-h-0 px-3 py-1.5"
+								onClick={() => setIsMobileSheetMinimized(true)}
+							>
+								Minimize
+							</Button>
+						</div>
+					}
+				>
 					<div className="space-y-4">
 						{showInput ? renderForm() : (
 							<Button variant="secondary" className="w-full" onClick={() => setShowInput(true)}>
@@ -165,7 +189,7 @@ export default function HomePage() {
 						) : null}
 					</div>
 				</Sheet>
-			}
+			)}
 		>
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ?
 				<div
