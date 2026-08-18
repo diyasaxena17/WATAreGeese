@@ -1,15 +1,19 @@
 # Map Rendering Audit
 
 Issue #9 starts the move away from direct Google Maps coupling. The active
-renderer now uses Leaflet for the basemap, with Google-specific code retained as
-inherited compatibility code until later overlay/directions work replaces it.
+renderer now uses Leaflet for the basemap, campus overlays, location markers,
+calculated routes, and direction highlighting. Google-specific code is retained
+as inherited compatibility code until later cleanup removes it.
 
 ## Current Google-specific Code
 
 - `web/src/map-rendering/google/GoogleMapRenderer.tsx` contains the inherited
   Google renderer implementation, but it is no longer the active renderer.
 - `web/src/map-rendering/leaflet/LeafletMapRenderer.tsx` owns the active
-  Leaflet basemap renderer.
+  Leaflet renderer boundary.
+- `web/src/map-rendering/leaflet/LeafletMapLayers.tsx` renders campus overlays,
+  selected location markers, calculated route geometry, and direction-step
+  highlighting.
 - `web/src/features/map/config/mapConfig.ts` centralizes the map center, zoom,
   bounds, tile URL, and attribution.
 - `web/src/map/loadMap.ts` loads the Google Maps JavaScript API and creates the
@@ -30,7 +34,8 @@ inherited compatibility code until later overlay/directions work replaces it.
 ## UI Components With Google Coupling
 
 - `DirectionsListItem` still depends on Google map objects for hover and active
-  route highlighting.
+  route highlighting, but the active Leaflet renderer now provides direction
+  item rendering through the renderer boundary.
 
 Home screen application code now talks to `useMapRenderer()` instead of importing
 Google or Leaflet APIs directly.
@@ -57,10 +62,12 @@ Google or Leaflet APIs directly.
 - React Leaflet `MapContainer` and `TileLayer`
 - OpenStreetMap-compatible development tile URL
 - OpenStreetMap attribution display
+- Campus path and building outline layers from campus-data selectors
+- Route polylines from `Route.graphLocations[*].path`
+- Renderer-neutral highlighted direction index feeding Leaflet layers
 
 ## Target Direction
 
 `HomePage` and navigation features should depend on `web/src/map-rendering`
-only. Future commits can move campus overlays, route drawing, and direction-step
-highlighting onto the Leaflet renderer while routing, navigation, and
-campus-data modules remain independent from Leaflet.
+only. Routing, navigation, and campus-data modules remain independent from
+Leaflet.

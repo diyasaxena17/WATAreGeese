@@ -1,11 +1,17 @@
 import 'leaflet/dist/leaflet.css';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 
 import { mapConfig } from '../../features/map/config/mapConfig';
-import { Location } from '../../routing/types';
+import { Location, Route } from '../../routing/types';
 import { MapLocationSyncRequest, MapRenderer } from '../types';
+import {
+	CampusLayers,
+	LeafletDirectionItem,
+	LocationMarkers,
+	RouteLayers
+} from './LeafletMapLayers';
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {
@@ -19,7 +25,12 @@ function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	return request.startEndLocations.get(`${request.building.value}|${request.floor.value}`) ?? null;
 }
 
-export function useLeafletMapRenderer(): MapRenderer {
+export function useLeafletMapRenderer(hasRoute = false): MapRenderer {
+	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
+	const [highlightedDirection, setHighlightedDirection] = useState<number | null>(null);
+	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
+	const [endMarkerLocation, setEndMarkerLocation] = useState<Location | null>(null);
+
 	return useMemo(() => ({
 		mapElement: (
 			<MapContainer
@@ -34,13 +45,31 @@ export function useLeafletMapRenderer(): MapRenderer {
 					url={mapConfig.tileUrl}
 					attribution={mapConfig.attribution}
 				/>
+				<CampusLayers dimmed={hasRoute} />
+				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />
+				<RouteLayers route={displayedRoute} highlightedDirection={highlightedDirection} />
 			</MapContainer>
 		),
 		isReady: true,
-		canRenderDirections: false,
+		canRenderDirections: true,
 		syncStartLocation: resolveLocation,
 		syncEndLocation: resolveLocation,
-		displayRoute: () => () => {},
-		renderDirectionItem: () => null
-	}), []);
+		setLocationMarkers: (start, end) => {
+			setStartMarkerLocation(start);
+			setEndMarkerLocation(end);
+		},
+		displayRoute: route => {
+			setDisplayedRoute(route);
+			return () => setDisplayedRoute(null);
+		},
+		renderDirectionItem: request => (
+			<LeafletDirectionItem
+				graphLocation={request.graphLocation}
+				order={request.order}
+				onlyHighlightOnHover={request.onlyHighlightOnHover}
+				onHighlight={() => setHighlightedDirection(request.order)}
+				onClearHighlight={() => setHighlightedDirection(null)}
+			/>
+		)
+	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, startMarkerLocation]);
 }

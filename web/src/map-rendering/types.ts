@@ -28,6 +28,7 @@ export type MapRenderer = {
 	canRenderDirections: boolean;
 	syncStartLocation: (request: MapLocationSyncRequest) => Location | null;
 	syncEndLocation: (request: MapLocationSyncRequest) => Location | null;
+	setLocationMarkers: (start: Location | null, end: Location | null) => void;
 	displayRoute: (route: Route | null) => RouteDisplayCleanup;
 	renderDirectionItem: (request: DirectionItemRequest) => ReactNode;
 };

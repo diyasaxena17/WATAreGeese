@@ -55,6 +55,7 @@ export function useGoogleMapRenderer(hasRoute: boolean): MapRenderer {
 			Markers,
 			endMarkerContent
 		)(),
+		setLocationMarkers: () => {},
 		displayRoute: route => displayRoute(googleMap, route),
 		renderDirectionItem: request => googleMap && Markers ? (
 			<DirectionsListItem

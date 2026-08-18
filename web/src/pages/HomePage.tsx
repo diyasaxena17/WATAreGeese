@@ -39,26 +39,30 @@ export default function HomePage() {
 		building: startBuildingOption,
 		floor: startFloorOption,
 		startEndLocations,
-		route,
+		route: null,
 		clearRoute: routeClear,
 		setClearRoute: setRouteClear,
 		setRoute,
 		setHasRoute
 	}), [
-		mapRenderer, startBuildingOption, startFloorOption, startEndLocations, route, routeClear
+		mapRenderer, startBuildingOption, startFloorOption, startEndLocations, routeClear
 	]);
 	const endLocation = useMemo(() => mapRenderer.syncEndLocation({
 		building: endBuildingOption,
 		floor: endFloorOption,
 		startEndLocations,
-		route,
+		route: null,
 		clearRoute: routeClear,
 		setClearRoute: setRouteClear,
 		setRoute,
 		setHasRoute
 	}), [
-		mapRenderer, endBuildingOption, endFloorOption, startEndLocations, route, routeClear
+		mapRenderer, endBuildingOption, endFloorOption, startEndLocations, routeClear
 	]);
+
+	useEffect(() => {
+		mapRenderer.setLocationMarkers(startLocation, endLocation);
+	}, [mapRenderer, startLocation, endLocation]);
 
 	useEffect(() => {
 		if (hasRoute) {
@@ -85,16 +89,37 @@ export default function HomePage() {
 	};
 
 	const handleSwapLocations = () => {
+		clearDisplayedRoute();
 		setStartBuilding(endBuilding);
 		setEndBuilding(startBuilding);
+	};
+
+	const handleStartBuildingChange = (building: BuildingSearchResult) => {
+		clearDisplayedRoute();
+		setStartBuilding(building);
+	};
+
+	const handleEndBuildingChange = (building: BuildingSearchResult) => {
+		clearDisplayedRoute();
+		setEndBuilding(building);
+	};
+
+	const clearDisplayedRoute = () => {
+		if(route) {
+			routeClear();
+			setRouteClear(() => () => {});
+			setRoute(null);
+			setHasRoute(false);
+			setShowDirections(false);
+		}
 	};
 
 	const renderForm = () => (
 		<RouteForm
 			from={startBuilding}
 			to={endBuilding}
-			onFromChange={setStartBuilding}
-			onToChange={setEndBuilding}
+			onFromChange={handleStartBuildingChange}
+			onToChange={handleEndBuildingChange}
 			onSwap={handleSwapLocations}
 			onSubmit={handleSubmit}
 		/>
