@@ -1,24 +1,34 @@
 import { Route } from '../../routing/types';
 import DirectionsListItem from './DirectionsListItem';
-import { DirectionStepRenderer } from './types';
 
 export type DirectionsListProps = {
     route: Route;
-    renderDirectionItem: DirectionStepRenderer;
+    selectedDirection: number | null;
+    onHighlightDirection: (order: number) => void;
+    onClearHighlight: () => void;
+    onSelectDirection: (order: number) => void;
 };
 
-export default function DirectionsList({ route, renderDirectionItem }: DirectionsListProps) {
+export default function DirectionsList({
+    route,
+    selectedDirection,
+    onHighlightDirection,
+    onClearHighlight,
+    onSelectDirection
+}: DirectionsListProps) {
     return (
-        <>
+        <div className="space-y-1">
             {route.graphLocations.slice(1).map((graphLocation, idx) => (
                 <DirectionsListItem
                     key={`${graphLocation.location.toString()}-${idx}`}
                     graphLocation={graphLocation}
                     order={idx + 1}
-                    onlyHighlightOnHover
-                    renderDirectionItem={renderDirectionItem}
+                    isSelected={selectedDirection == idx + 1}
+                    onHighlight={onHighlightDirection}
+                    onClearHighlight={onClearHighlight}
+                    onSelect={onSelectDirection}
                 />
             ))}
-        </>
+        </div>
     );
 }

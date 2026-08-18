@@ -28,9 +28,10 @@ describe('DirectionsPanel', () => {
                 route={route}
                 from={{ id: 'DC', code: 'DC', name: 'Davis Centre' }}
                 to={{ id: 'E7', code: 'E7', name: 'Engineering 7' }}
-                renderDirectionItem={({ order, graphLocation }) => (
-                    <div>Step {order}: {graphLocation.location.buildingFloor.buildingCode}</div>
-                )}
+                selectedDirection={null}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={vi.fn()}
+                onSelectDirection={vi.fn()}
             />
         );
 
@@ -38,7 +39,9 @@ describe('DirectionsPanel', () => {
         expect(screen.getByText('Davis Centre')).toBeInTheDocument();
         expect(screen.getByText('Engineering 7')).toBeInTheDocument();
         expect(screen.getByText('650 m')).toBeInTheDocument();
-        expect(screen.getByText('Step 1: E7')).toBeInTheDocument();
+        expect(screen.getByText('Directions')).toBeInTheDocument();
+        expect(screen.getByText(/Take the hallway on E7 floor 1/i)).toBeInTheDocument();
+        expect(screen.getByText('hallway')).toBeInTheDocument();
     });
 
     it('renders the no-route state', () => {
@@ -46,34 +49,40 @@ describe('DirectionsPanel', () => {
             <DirectionsPanel
                 variant="desktop"
                 route={null}
-                renderDirectionItem={() => null}
+                selectedDirection={null}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={vi.fn()}
+                onSelectDirection={vi.fn()}
             />
         );
 
         expect(screen.getByText('No route found')).toBeInTheDocument();
     });
 
-    it('wires mobile direction controls without calculating routes', () => {
-        const onPreviousDirection = vi.fn();
-        const onNextDirection = vi.fn();
+    it('wires shared direction rows to application highlight state', () => {
+        const onHighlightDirection = vi.fn();
+        const onClearHighlight = vi.fn();
+        const onSelectDirection = vi.fn();
 
         render(
             <DirectionsPanel
                 variant="mobile"
                 route={makeRoute()}
-                currentDirection={1}
-                onPreviousDirection={onPreviousDirection}
-                onNextDirection={onNextDirection}
-                renderDirectionItem={() => <div>Current step</div>}
+                selectedDirection={1}
+                onHighlightDirection={onHighlightDirection}
+                onClearHighlight={onClearHighlight}
+                onSelectDirection={onSelectDirection}
             />
         );
 
-        fireEvent.click(screen.getByText('◀️'));
-        fireEvent.click(screen.getByText('▶️'));
+        const step = screen.getByRole('button', { name: /1take the hallway on e7 floor 1hallway/i });
+        fireEvent.mouseEnter(step);
+        fireEvent.click(step);
+        fireEvent.mouseLeave(step);
 
-        expect(onPreviousDirection).toHaveBeenCalledTimes(1);
-        expect(onNextDirection).toHaveBeenCalledTimes(1);
-        expect(screen.getByText('Current step')).toBeInTheDocument();
+        expect(onHighlightDirection).toHaveBeenCalledWith(1);
+        expect(onSelectDirection).toHaveBeenCalledWith(1);
+        expect(onClearHighlight).toHaveBeenCalledTimes(1);
     });
 
     it('keeps inherited route summary formatting stable', () => {
@@ -102,7 +111,10 @@ describe('DirectionsPanel', () => {
                 from={{ id: 'DC', code: 'DC', name: 'Davis Centre' }}
                 to={{ id: 'E7', code: 'E7', name: 'Engineering 7' }}
                 onChangeRoute={onChangeRoute}
-                renderDirectionItem={() => null}
+                selectedDirection={null}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={vi.fn()}
+                onSelectDirection={vi.fn()}
             />
         );
 

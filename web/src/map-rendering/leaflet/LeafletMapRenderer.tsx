@@ -8,7 +8,6 @@ import { Location, Route } from '../../routing/types';
 import { MapLocationSyncRequest, MapRenderer } from '../types';
 import {
 	CampusLayers,
-	LeafletDirectionItem,
 	LocationMarkers,
 	RouteLayers
 } from './LeafletMapLayers';
@@ -25,9 +24,8 @@ function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	return request.startEndLocations.get(`${request.building.value}|${request.floor.value}`) ?? null;
 }
 
-export function useLeafletMapRenderer(hasRoute = false): MapRenderer {
+export function useLeafletMapRenderer(hasRoute = false, highlightedDirection: number | null = null): MapRenderer {
 	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
-	const [highlightedDirection, setHighlightedDirection] = useState<number | null>(null);
 	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
 	const [endMarkerLocation, setEndMarkerLocation] = useState<Location | null>(null);
 
@@ -61,15 +59,6 @@ export function useLeafletMapRenderer(hasRoute = false): MapRenderer {
 		displayRoute: route => {
 			setDisplayedRoute(route);
 			return () => setDisplayedRoute(null);
-		},
-		renderDirectionItem: request => (
-			<LeafletDirectionItem
-				graphLocation={request.graphLocation}
-				order={request.order}
-				onlyHighlightOnHover={request.onlyHighlightOnHover}
-				onHighlight={() => setHighlightedDirection(request.order)}
-				onClearHighlight={() => setHighlightedDirection(null)}
-			/>
-		)
+		}
 	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, startMarkerLocation]);
 }

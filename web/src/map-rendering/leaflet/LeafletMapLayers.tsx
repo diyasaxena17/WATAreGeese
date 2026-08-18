@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 
 import { CAMPUS_FEATURE_TYPES, CampusFeatureType } from '../../campus-data/schema';
 import { getBuildingOutlines, getPathFeatures } from '../../campus-data/selectors';
-import { toDirectionsString } from '../../routing/directions';
 import { GraphLocation, Location, Route } from '../../routing/types';
 
 type LeafletCoordinate = [number, number];
@@ -74,8 +73,8 @@ export function LocationMarkers({ start, end }: { start: Location | null, end: L
 					radius={7}
 					pathOptions={{
 						color: 'var(--color-primary)',
-						fillColor: 'var(--color-primary)',
-						fillOpacity: 0.95,
+						fillColor: 'var(--color-surface)',
+						fillOpacity: 1,
 						weight: 2
 					}}
 				/>
@@ -85,8 +84,8 @@ export function LocationMarkers({ start, end }: { start: Location | null, end: L
 					center={toLeafletCoordinate(end.coordinate.toArray())}
 					radius={7}
 					pathOptions={{
-						color: 'var(--color-success)',
-						fillColor: 'var(--color-success)',
+						color: 'var(--color-primary)',
+						fillColor: 'var(--color-primary)',
 						fillOpacity: 0.95,
 						weight: 2
 					}}
@@ -113,8 +112,8 @@ export function RouteLayers({ route, highlightedDirection }: { route: Route | nu
 							center={positions[0]}
 							radius={isHighlighted ? 7 : 5}
 							pathOptions={{
-								color: isHighlighted ? 'black' : routeColor(graphLocation),
-								fillColor: routeColor(graphLocation),
+								color: isHighlighted ? 'var(--color-text-primary)' : routeColor(graphLocation),
+								fillColor: isHighlighted ? 'var(--color-accent)' : routeColor(graphLocation),
 								fillOpacity: 0.95,
 								weight: isHighlighted ? 3 : 2
 							}}
@@ -127,7 +126,7 @@ export function RouteLayers({ route, highlightedDirection }: { route: Route | nu
 						key={`route-${index}`}
 						positions={positions}
 						pathOptions={{
-							color: routeColor(graphLocation),
+							color: isHighlighted ? 'var(--color-accent)' : routeColor(graphLocation),
 							weight: isHighlighted ? 8 : 6,
 							opacity: 1
 						}}
@@ -135,39 +134,6 @@ export function RouteLayers({ route, highlightedDirection }: { route: Route | nu
 				);
 			})}
 		</>
-	);
-}
-
-export function LeafletDirectionItem({
-	graphLocation,
-	order,
-	onlyHighlightOnHover,
-	onHighlight,
-	onClearHighlight
-}: {
-	graphLocation: GraphLocation;
-	order: number;
-	onlyHighlightOnHover: boolean;
-	onHighlight: () => void;
-	onClearHighlight: () => void;
-}) {
-	const activeHighlightProps = onlyHighlightOnHover
-		? {
-			onMouseEnter: onHighlight,
-			onMouseLeave: onClearHighlight,
-			onFocus: onHighlight,
-			onBlur: onClearHighlight
-		}
-		: {};
-
-	return (
-		<div
-			className="flex px-2 text-left hover:bg-surface-raised focus-within:bg-surface-raised"
-			{...activeHighlightProps}
-		>
-			<div className="min-w-7">{`${order}.`}</div>
-			<div>{toDirectionsString(graphLocation)}</div>
-		</div>
 	);
 }
 

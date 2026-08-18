@@ -1,6 +1,6 @@
 import { Dispatch, ReactNode, SetStateAction } from 'react';
 
-import { Route, GraphLocation, Location } from '../routing/types';
+import { Route, Location } from '../routing/types';
 import { OptionType } from '../map/locations';
 
 export type RouteDisplayCleanup = () => void;
@@ -16,12 +16,6 @@ export type MapLocationSyncRequest = {
 	setHasRoute: Dispatch<SetStateAction<boolean>>;
 };
 
-export type DirectionItemRequest = {
-	graphLocation: GraphLocation;
-	order: number;
-	onlyHighlightOnHover: boolean;
-};
-
 export type MapRenderer = {
 	mapElement: ReactNode;
 	isReady: boolean;
@@ -30,5 +24,4 @@ export type MapRenderer = {
 	syncEndLocation: (request: MapLocationSyncRequest) => Location | null;
 	setLocationMarkers: (start: Location | null, end: Location | null) => void;
 	displayRoute: (route: Route | null) => RouteDisplayCleanup;
-	renderDirectionItem: (request: DirectionItemRequest) => ReactNode;
 };

@@ -25,15 +25,14 @@ export default function HomePage() {
 
 	const [hasRoute, setHasRoute] = useState(false);
 	const [route, setRoute] = useState<Route | null>(null);
-	// Index of current direction instruction being displayed (one indexed)
-	const [currentDirection, setCurrentDirection] = useState<number>(0);
+	const [highlightedDirection, setHighlightedDirection] = useState<number | null>(null);
 	const [routeClear, setRouteClear] = useState<() => void>(() => () => { });
 
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
 	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
 	const sheetDragStartY = useRef<number | null>(null);
-	const mapRenderer = useMapRenderer();
+	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection);
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
@@ -76,9 +75,8 @@ export default function HomePage() {
 				clearPreviousRoute();
 				return mapRenderer.displayRoute(route);
 			});
-			setCurrentDirection(1);
 		} else {
-			setCurrentDirection(0);
+			setHighlightedDirection(null);
 		}
 	}, [mapRenderer, route, hasRoute]);
 
@@ -90,6 +88,7 @@ export default function HomePage() {
 			setHasRoute(true);
 			setShowDirections(true);
 			setShowInput(false);
+			setHighlightedDirection(null);
 		}
 	};
 
@@ -116,6 +115,7 @@ export default function HomePage() {
 			setRoute(null);
 			setHasRoute(false);
 			setShowDirections(false);
+			setHighlightedDirection(null);
 		}
 	};
 
@@ -133,7 +133,22 @@ export default function HomePage() {
 	const showRouteForm = () => {
 		setShowInput(true);
 		setShowDirections(false);
+		setHighlightedDirection(null);
 	};
+
+	const renderDirectionsPanel = (variant: 'mobile' | 'desktop') => (
+		<DirectionsPanel
+			variant={variant}
+			route={route}
+			onChangeRoute={showRouteForm}
+			from={toRouteEndpoint(startBuilding)}
+			to={toRouteEndpoint(endBuilding)}
+			selectedDirection={highlightedDirection}
+			onHighlightDirection={setHighlightedDirection}
+			onSelectDirection={setHighlightedDirection}
+			onClearHighlight={() => setHighlightedDirection(null)}
+		/>
+	);
 
 	const handleSheetDragStart = (event: PointerEvent<HTMLButtonElement>) => {
 		sheetDragStartY.current = event.clientY;
@@ -158,12 +173,15 @@ export default function HomePage() {
 							description="Waterloo, without the outside."
 						/>
 						{hasRoute && !showInput ? (
-							<RouteSummary
-								route={route}
-								from={toRouteEndpoint(startBuilding)}
-								to={toRouteEndpoint(endBuilding)}
-								onChangeRoute={showRouteForm}
-							/>
+							<div className="space-y-4">
+								<RouteSummary
+									route={route}
+									from={toRouteEndpoint(startBuilding)}
+									to={toRouteEndpoint(endBuilding)}
+									onChangeRoute={showRouteForm}
+								/>
+								{showDirections ? renderDirectionsPanel('desktop') : null}
+							</div>
 						) : renderForm()}
 						<a
 							className="wg-body-secondary inline-flex underline decoration-border underline-offset-4 hover:text-text-primary"
@@ -205,12 +223,15 @@ export default function HomePage() {
 				>
 					<div className="space-y-4">
 						{showInput ? renderForm() : (
-							<RouteSummary
-								route={route}
-								from={toRouteEndpoint(startBuilding)}
-								to={toRouteEndpoint(endBuilding)}
-								onChangeRoute={showRouteForm}
-							/>
+							<div className="space-y-4">
+								<RouteSummary
+									route={route}
+									from={toRouteEndpoint(startBuilding)}
+									to={toRouteEndpoint(endBuilding)}
+									onChangeRoute={showRouteForm}
+								/>
+								{showDirections ? renderDirectionsPanel('mobile') : null}
+							</div>
 						)}
 						{hasRoute ? (
 							<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
@@ -221,29 +242,7 @@ export default function HomePage() {
 				</Sheet>
 			)}
 		>
-			{hasRoute && mapRenderer.canRenderDirections && showDirections ?
-				<DirectionsPanel
-					variant="mobile"
-					route={route}
-					currentDirection={currentDirection}
-					onPreviousDirection={() => setCurrentDirection(Math.max(currentDirection-1, 1))}
-					onNextDirection={() => setCurrentDirection(Math.min(currentDirection+1, route?.graphLocations.length ? route.graphLocations.length-1 : 1))}
-					onChangeRoute={showRouteForm}
-					from={toRouteEndpoint(startBuilding)}
-					to={toRouteEndpoint(endBuilding)}
-					renderDirectionItem={mapRenderer.renderDirectionItem}
-				/>
-			: ''}
-			{hasRoute && mapRenderer.canRenderDirections && showDirections ?
-				<DirectionsPanel
-					variant="desktop"
-					route={route}
-					onChangeRoute={showRouteForm}
-					from={toRouteEndpoint(startBuilding)}
-					to={toRouteEndpoint(endBuilding)}
-					renderDirectionItem={mapRenderer.renderDirectionItem}
-				/>
-			: ''}
+			{hasRoute && mapRenderer.canRenderDirections && showDirections ? null : ''}
 		</AppShell>
 	);
 }
