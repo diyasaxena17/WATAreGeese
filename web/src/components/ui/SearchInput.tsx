@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from 'react';
+import { forwardRef, InputHTMLAttributes } from 'react';
 import { cx } from './utils';
 
 export type SearchInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> & {
@@ -8,7 +8,7 @@ export type SearchInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type
     onClear?: () => void;
 };
 
-export default function SearchInput({
+const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(function SearchInput({
     label,
     value,
     onChange,
@@ -16,7 +16,7 @@ export default function SearchInput({
     className,
     id,
     ...props
-}: SearchInputProps) {
+}, ref) {
     const inputId = id ?? 'wg-search-input';
 
     return (
@@ -25,6 +25,7 @@ export default function SearchInput({
             <div className="wg-control flex items-center gap-2 px-3">
                 <span aria-hidden="true" className="text-text-secondary">⌕</span>
                 <input
+                    ref={ref}
                     id={inputId}
                     type="search"
                     value={value}
@@ -48,4 +49,6 @@ export default function SearchInput({
             </div>
         </div>
     );
-}
+});
+
+export default SearchInput;

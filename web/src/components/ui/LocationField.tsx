@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ButtonHTMLAttributes, forwardRef, ReactNode } from 'react';
 import { cx } from './utils';
 
 export type LocationFieldState = 'empty' | 'selected' | 'current-location' | 'disabled';
@@ -12,7 +12,7 @@ export type LocationFieldProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, '
     disabled?: boolean;
 };
 
-export default function LocationField({
+const LocationField = forwardRef<HTMLButtonElement, LocationFieldProps>(function LocationField({
     label,
     primaryText,
     secondaryText,
@@ -22,12 +22,13 @@ export default function LocationField({
     className,
     type = 'button',
     ...props
-}: LocationFieldProps) {
+}, ref) {
     const isDisabled = disabled || state == 'disabled';
     const displayText = primaryText ?? 'Choose location';
 
     return (
         <button
+            ref={ref}
             type={type}
             disabled={isDisabled}
             className={cx(
@@ -48,4 +49,6 @@ export default function LocationField({
             </span>
         </button>
     );
-}
+});
+
+export default LocationField;
