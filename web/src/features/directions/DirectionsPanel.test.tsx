@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BuildingFloor, Coordinate, GraphLocation, Location, Route } from '../../routing/types';
 import DirectionsPanel from './DirectionsPanel';
-import { getRouteSummaryLines } from './RouteSummary';
+import { formatRouteDistance, getRouteMetrics, getRouteSummaryLines } from './routeMetrics';
 
 function makeLocation(buildingCode: string, floor = '1') {
     return new Location(
@@ -26,14 +26,18 @@ describe('DirectionsPanel', () => {
             <DirectionsPanel
                 variant="desktop"
                 route={route}
+                from={{ id: 'DC', code: 'DC', name: 'Davis Centre' }}
+                to={{ id: 'E7', code: 'E7', name: 'Engineering 7' }}
                 renderDirectionItem={({ order, graphLocation }) => (
                     <div>Step {order}: {graphLocation.location.buildingFloor.buildingCode}</div>
                 )}
             />
         );
 
-        expect(screen.getByText('Time: 8min, Distance: 650m')).toBeInTheDocument();
-        expect(screen.getByText('⬆️1 floors, ⬇️ 0 floors')).toBeInTheDocument();
+        expect(screen.getByText('DC → E7')).toBeInTheDocument();
+        expect(screen.getByText('Davis Centre')).toBeInTheDocument();
+        expect(screen.getByText('Engineering 7')).toBeInTheDocument();
+        expect(screen.getByText('650 m')).toBeInTheDocument();
         expect(screen.getByText('Step 1: E7')).toBeInTheDocument();
     });
 
@@ -46,7 +50,7 @@ describe('DirectionsPanel', () => {
             />
         );
 
-        expect(screen.getByText('No routes found :(')).toBeInTheDocument();
+        expect(screen.getByText('No route found')).toBeInTheDocument();
     });
 
     it('wires mobile direction controls without calculating routes', () => {
@@ -77,5 +81,34 @@ describe('DirectionsPanel', () => {
             'Time: 8min, Distance: 650m',
             '⬆️1 floors, ⬇️ 0 floors'
         ]);
+    });
+
+    it('formats real route metrics for compact display', () => {
+        expect(formatRouteDistance(650)).toBe('650 m');
+        expect(formatRouteDistance(1240)).toBe('1.2 km');
+        expect(getRouteMetrics(makeRoute())).toEqual([
+            { label: 'Distance', value: '650 m' },
+            { label: 'Segments', value: '1' }
+        ]);
+    });
+
+    it('calls Change route without changing endpoint data', () => {
+        const onChangeRoute = vi.fn();
+
+        render(
+            <DirectionsPanel
+                variant="desktop"
+                route={makeRoute()}
+                from={{ id: 'DC', code: 'DC', name: 'Davis Centre' }}
+                to={{ id: 'E7', code: 'E7', name: 'Engineering 7' }}
+                onChangeRoute={onChangeRoute}
+                renderDirectionItem={() => null}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Change route' }));
+
+        expect(onChangeRoute).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('DC → E7')).toBeInTheDocument();
     });
 });

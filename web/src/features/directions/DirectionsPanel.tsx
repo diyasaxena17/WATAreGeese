@@ -2,7 +2,7 @@ import { Route } from '../../routing/types';
 import DirectionsList from './DirectionsList';
 import DirectionsListItem from './DirectionsListItem';
 import RouteSummary from './RouteSummary';
-import { DirectionStepRenderer } from './types';
+import { DirectionStepRenderer, RouteEndpointSummary } from './types';
 
 export type DirectionsPanelProps = {
     route: Route | null;
@@ -10,6 +10,9 @@ export type DirectionsPanelProps = {
     currentDirection?: number;
     onPreviousDirection?: () => void;
     onNextDirection?: () => void;
+    onChangeRoute?: () => void;
+    from?: RouteEndpointSummary | null;
+    to?: RouteEndpointSummary | null;
     renderDirectionItem: DirectionStepRenderer;
 };
 
@@ -19,6 +22,9 @@ export default function DirectionsPanel({
     currentDirection = 1,
     onPreviousDirection,
     onNextDirection,
+    onChangeRoute,
+    from,
+    to,
     renderDirectionItem
 }: DirectionsPanelProps) {
     if(variant == 'mobile') {
@@ -29,7 +35,9 @@ export default function DirectionsPanel({
             >
                 {route != null ? (
                     <>
-                        <RouteSummary route={route} />
+                        <div className="px-3 pb-3">
+                            <RouteSummary route={route} from={from} to={to} onChangeRoute={onChangeRoute} />
+                        </div>
                         <div className="flex flex-row">
                             <button
                                 className="px-1 text-xl"
@@ -53,7 +61,7 @@ export default function DirectionsPanel({
                             </button>
                         </div>
                     </>
-                ) : 'No routes found :('}
+                ) : <div className="px-3"><RouteSummary route={null} onChangeRoute={onChangeRoute} /></div>}
             </div>
         );
     }
@@ -65,10 +73,12 @@ export default function DirectionsPanel({
         >
             {route != null ? (
                 <>
-                    <RouteSummary route={route} />
+                    <RouteSummary route={route} from={from} to={to} onChangeRoute={onChangeRoute} />
+                    <div className="mt-4">
                     <DirectionsList route={route} renderDirectionItem={renderDirectionItem} />
+                    </div>
                 </>
-            ) : 'No routes found :('}
+            ) : <RouteSummary route={null} onChangeRoute={onChangeRoute} />}
         </div>
     );
 }

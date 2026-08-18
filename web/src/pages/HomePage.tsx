@@ -9,6 +9,8 @@ import Panel from '../components/ui/Panel';
 import Sheet from '../components/ui/Sheet';
 import SectionHeader from '../components/ui/SectionHeader';
 import DirectionsPanel from '../features/directions/DirectionsPanel';
+import RouteSummary from '../features/directions/RouteSummary';
+import { RouteEndpointSummary } from '../features/directions/types';
 import RouteForm from '../features/navigation/RouteForm';
 import { NavigationService } from '../features/navigation/navigationService';
 import { useMapRenderer } from '../map-rendering';
@@ -128,6 +130,11 @@ export default function HomePage() {
 		/>
 	);
 
+	const showRouteForm = () => {
+		setShowInput(true);
+		setShowDirections(false);
+	};
+
 	const handleSheetDragStart = (event: PointerEvent<HTMLButtonElement>) => {
 		sheetDragStartY.current = event.clientY;
 		event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -150,7 +157,14 @@ export default function HomePage() {
 							title="WATAreGeese 🪿"
 							description="Waterloo, without the outside."
 						/>
-						{renderForm()}
+						{hasRoute && !showInput ? (
+							<RouteSummary
+								route={route}
+								from={toRouteEndpoint(startBuilding)}
+								to={toRouteEndpoint(endBuilding)}
+								onChangeRoute={showRouteForm}
+							/>
+						) : renderForm()}
 						<a
 							className="wg-body-secondary inline-flex underline decoration-border underline-offset-4 hover:text-text-primary"
 							href="https://github.com/diyasaxena17/WATAreGeese"
@@ -191,9 +205,12 @@ export default function HomePage() {
 				>
 					<div className="space-y-4">
 						{showInput ? renderForm() : (
-							<Button variant="secondary" className="w-full" onClick={() => setShowInput(true)}>
-								Show input
-							</Button>
+							<RouteSummary
+								route={route}
+								from={toRouteEndpoint(startBuilding)}
+								to={toRouteEndpoint(endBuilding)}
+								onChangeRoute={showRouteForm}
+							/>
 						)}
 						{hasRoute ? (
 							<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
@@ -211,6 +228,9 @@ export default function HomePage() {
 					currentDirection={currentDirection}
 					onPreviousDirection={() => setCurrentDirection(Math.max(currentDirection-1, 1))}
 					onNextDirection={() => setCurrentDirection(Math.min(currentDirection+1, route?.graphLocations.length ? route.graphLocations.length-1 : 1))}
+					onChangeRoute={showRouteForm}
+					from={toRouteEndpoint(startBuilding)}
+					to={toRouteEndpoint(endBuilding)}
 					renderDirectionItem={mapRenderer.renderDirectionItem}
 				/>
 			: ''}
@@ -218,11 +238,23 @@ export default function HomePage() {
 				<DirectionsPanel
 					variant="desktop"
 					route={route}
+					onChangeRoute={showRouteForm}
+					from={toRouteEndpoint(startBuilding)}
+					to={toRouteEndpoint(endBuilding)}
 					renderDirectionItem={mapRenderer.renderDirectionItem}
 				/>
 			: ''}
 		</AppShell>
 	);
+}
+
+function toRouteEndpoint(building: BuildingSearchResult | null): RouteEndpointSummary | null {
+	if(!building) return null;
+	return {
+		id: building.id,
+		code: building.buildingCode,
+		name: building.officialName
+	};
 }
 
 function toBuildingOption(building: BuildingSearchResult | null): OptionType | null {
