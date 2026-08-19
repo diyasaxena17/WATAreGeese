@@ -76,7 +76,7 @@ describe('WATIsGrass routing engine', () => {
 	it('exposes NavigationService.calculateRoute as the navigation interface', () => {
 		const start = campusLocation('ML', '1');
 		const end = campusLocation('SCH', '1');
-		const result = navigationService.calculateRoute({ start, end, mode: 'shortest' });
+		const result = navigationService.calculateRoute({ start, end, mode: 'avoid-outside' });
 
 		expect(result.route).not.toBeNull();
 		expect(result.route?.graphLocations[0].location.equals(start)).toBe(true);
@@ -241,4 +241,17 @@ describe('WATIsGrass routing engine', () => {
 		`);
 		expect(route.graphLocations.at(-1)?.timeOutside).toBeGreaterThan(0);
 	});
+
+	it('uses shortest routing for touch-grass style AL to B1 navigation', () => {
+		const start = campusLocation('AL', '1');
+		const end = campusLocation('B1', '1');
+		const route = navigationService.calculateRoute({ start, end, mode: 'shortest' }).route;
+
+		if(!route) throw new Error('Expected route from AL to B1');
+
+		expectRouteEndpoints(route, start, end);
+		expect(routeModes(route)).toContain('walkway');
+		expect(route.graphLocations.at(-1)?.timeOutside).toBeGreaterThan(0);
+	});
+
 });

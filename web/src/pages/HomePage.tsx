@@ -94,7 +94,11 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 		e.preventDefault();
 		if (mapRenderer.isReady && startLocation && endLocation) {
 			console.log(`Start: ${startLocation.toString()}, End: ${endLocation.toString()}`);
-			setRoute(navigationService.calculateRoute({ start: startLocation, end: endLocation }).route);
+			setRoute(navigationService.calculateRoute({
+				start: startLocation,
+				end: endLocation,
+				mode: routeModeForTunnellingPreference(tunnellingPreference)
+			}).route);
 			setHasRoute(true);
 			setShowDirections(true);
 			setShowInput(false);
@@ -349,4 +353,8 @@ function floorsForBuilding(building: BuildingSearchResult, buildingFloorOptions:
 
 function defaultFloor(floors: string[]) {
 	return floors.includes('1') ? '1' : floors[0] ?? null;
+}
+
+function routeModeForTunnellingPreference(preference: TunnellingPreference) {
+	return preference == 'touch-grass' ? 'shortest' : 'avoid-outside';
 }
