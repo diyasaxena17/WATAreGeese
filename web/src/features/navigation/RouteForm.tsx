@@ -7,16 +7,19 @@ import LocationField from '../../components/ui/LocationField';
 import LocationSearchSurface from './LocationSearchSurface';
 
 export type RouteEndpoint = 'from' | 'to';
+export type TunnellingPreference = 'no-the-geese' | 'touch-grass';
 
 export type RouteFormProps = {
 	from: BuildingSearchResult | null;
 	to: BuildingSearchResult | null;
 	fromFloor: string | null;
 	toFloor: string | null;
+	tunnellingPreference: TunnellingPreference;
 	onFromChange: (building: BuildingSearchResult) => void;
 	onToChange: (building: BuildingSearchResult) => void;
 	onFromFloorChange: (floor: string) => void;
 	onToFloorChange: (floor: string) => void;
+	onTunnellingPreferenceChange: (preference: TunnellingPreference) => void;
 	onSwap: () => void;
 	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
@@ -26,10 +29,12 @@ export default function RouteForm({
 	to,
 	fromFloor,
 	toFloor,
+	tunnellingPreference,
 	onFromChange,
 	onToChange,
 	onFromFloorChange,
 	onToFloorChange,
+	onTunnellingPreferenceChange,
 	onSwap,
 	onSubmit
 }: RouteFormProps) {
@@ -95,6 +100,18 @@ export default function RouteForm({
 					onChange={onToFloorChange}
 				/>
 			</div>
+
+			<label className="block">
+				<span className="wg-label mb-1 block">Tunnelling Preference</span>
+				<select
+					className="wg-control min-h-touch w-full px-3 py-2 text-wg-body"
+					value={tunnellingPreference}
+					onChange={event => onTunnellingPreferenceChange(event.target.value as TunnellingPreference)}
+				>
+					<option value="no-the-geese">NO THE GEESE</option>
+					<option value="touch-grass">touch grass</option>
+				</select>
+			</label>
 
 			<Button
 				type="submit"

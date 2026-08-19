@@ -13,10 +13,12 @@ function renderRouteForm(overrides = {}) {
 		to: null,
 		fromFloor: null,
 		toFloor: null,
+		tunnellingPreference: 'no-the-geese' as const,
 		onFromChange: vi.fn(),
 		onToChange: vi.fn(),
 		onFromFloorChange: vi.fn(),
 		onToFloorChange: vi.fn(),
+		onTunnellingPreferenceChange: vi.fn(),
 		onSwap: vi.fn(),
 		onSubmit: vi.fn((event: FormEvent<HTMLFormElement>) => event.preventDefault()),
 		...overrides
@@ -31,6 +33,7 @@ function StatefulRouteForm({ onSubmit = vi.fn((event: FormEvent<HTMLFormElement>
 	const [to, setTo] = useState<BuildingSearchResult | null>(null);
 	const [fromFloor, setFromFloor] = useState<string | null>(null);
 	const [toFloor, setToFloor] = useState<string | null>(null);
+	const [tunnellingPreference, setTunnellingPreference] = useState<'no-the-geese' | 'touch-grass'>('no-the-geese');
 
 	return (
 		<RouteForm
@@ -38,6 +41,7 @@ function StatefulRouteForm({ onSubmit = vi.fn((event: FormEvent<HTMLFormElement>
 			to={to}
 			fromFloor={fromFloor}
 			toFloor={toFloor}
+			tunnellingPreference={tunnellingPreference}
 			onFromChange={building => {
 				setFrom(building);
 				setFromFloor(defaultFloor(building.floors));
@@ -48,6 +52,7 @@ function StatefulRouteForm({ onSubmit = vi.fn((event: FormEvent<HTMLFormElement>
 			}}
 			onFromFloorChange={setFromFloor}
 			onToFloorChange={setToFloor}
+			onTunnellingPreferenceChange={setTunnellingPreference}
 			onSwap={() => {
 				setFrom(to);
 				setTo(from);
@@ -71,6 +76,24 @@ describe('RouteForm', () => {
 
 		expect(screen.getByLabelText(/from floor/i)).toBeDisabled();
 		expect(screen.getByLabelText(/to floor/i)).toBeDisabled();
+	});
+
+	it('shows tunnelling preference options', () => {
+		renderRouteForm();
+
+		expect(screen.getByLabelText(/tunnelling preference/i)).toHaveValue('no-the-geese');
+		expect(screen.getByRole('option', { name: 'NO THE GEESE' })).toBeInTheDocument();
+		expect(screen.getByRole('option', { name: 'touch grass' })).toBeInTheDocument();
+	});
+
+	it('allows tunnelling preference to be changed without submitting', async () => {
+		const user = userEvent.setup();
+		const props = renderRouteForm();
+
+		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'touch-grass');
+
+		expect(props.onTunnellingPreferenceChange).toHaveBeenCalledWith('touch-grass');
+		expect(props.onSubmit).not.toHaveBeenCalled();
 	});
 
 	it('searches buildings by alias and selects From', async () => {

@@ -13,7 +13,7 @@ import DirectionsPanel from '../features/directions/DirectionsPanel';
 import RouteSummary from '../features/directions/RouteSummary';
 import { RouteEndpointSummary } from '../features/directions/types';
 import { LocationService, useUserLocation } from '../features/location';
-import RouteForm from '../features/navigation/RouteForm';
+import RouteForm, { TunnellingPreference } from '../features/navigation/RouteForm';
 import { NavigationService } from '../features/navigation/navigationService';
 import { useMapRenderer } from '../map-rendering';
 
@@ -31,6 +31,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const [endBuilding, setEndBuilding] = useState<BuildingSearchResult | null>(null);
 	const [startFloor, setStartFloor] = useState<string | null>(null);
 	const [endFloor, setEndFloor] = useState<string | null>(null);
+	const [tunnellingPreference, setTunnellingPreference] = useState<TunnellingPreference>('no-the-geese');
 
 	const [hasRoute, setHasRoute] = useState(false);
 	const [route, setRoute] = useState<Route | null>(null);
@@ -148,10 +149,12 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 			to={endBuilding}
 			fromFloor={startFloor}
 			toFloor={endFloor}
+			tunnellingPreference={tunnellingPreference}
 			onFromChange={handleStartBuildingChange}
 			onToChange={handleEndBuildingChange}
 			onFromFloorChange={handleStartFloorChange}
 			onToFloorChange={handleEndFloorChange}
+			onTunnellingPreferenceChange={setTunnellingPreference}
 			onSwap={handleSwapLocations}
 			onSubmit={handleSubmit}
 		/>
