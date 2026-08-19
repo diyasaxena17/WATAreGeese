@@ -7,7 +7,7 @@ import LocationField from '../../components/ui/LocationField';
 import LocationSearchSurface from './LocationSearchSurface';
 
 export type RouteEndpoint = 'from' | 'to';
-export type TunnellingPreference = 'no-the-geese' | 'mixed' | 'touch-grass';
+export type TunnellingPreference = 'no-the-geese' | 'touch-grass';
 
 const TUNNELLING_PREFERENCES: {
 	value: TunnellingPreference;
@@ -20,14 +20,9 @@ const TUNNELLING_PREFERENCES: {
 		description: 'Tunnel at all cost.'
 	},
 	{
-		value: 'mixed',
-		label: 'mixed',
-		description: 'Balance tunnels, bridges, and outside paths.'
-	},
-	{
 		value: 'touch-grass',
 		label: 'touch grass',
-		description: 'Go outside as much as possible.'
+		description: 'Use the shortest possible route, inside or outside.'
 	}
 ];
 

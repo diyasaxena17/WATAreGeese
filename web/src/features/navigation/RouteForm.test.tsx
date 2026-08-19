@@ -33,7 +33,7 @@ function StatefulRouteForm({ onSubmit = vi.fn((event: FormEvent<HTMLFormElement>
 	const [to, setTo] = useState<BuildingSearchResult | null>(null);
 	const [fromFloor, setFromFloor] = useState<string | null>(null);
 	const [toFloor, setToFloor] = useState<string | null>(null);
-	const [tunnellingPreference, setTunnellingPreference] = useState<'no-the-geese' | 'mixed' | 'touch-grass'>('no-the-geese');
+	const [tunnellingPreference, setTunnellingPreference] = useState<'no-the-geese' | 'touch-grass'>('no-the-geese');
 
 	return (
 		<RouteForm
@@ -83,8 +83,8 @@ describe('RouteForm', () => {
 
 		expect(screen.getByLabelText(/tunnelling preference/i)).toHaveValue('no-the-geese');
 		expect(screen.getByRole('option', { name: 'NO THE GEESE' })).toBeInTheDocument();
-		expect(screen.getByRole('option', { name: 'mixed' })).toBeInTheDocument();
 		expect(screen.getByRole('option', { name: 'touch grass' })).toBeInTheDocument();
+		expect(screen.queryByRole('option', { name: 'mixed' })).not.toBeInTheDocument();
 		expect(screen.getByText('Tunnel at all cost.')).toBeInTheDocument();
 	});
 
@@ -92,21 +92,18 @@ describe('RouteForm', () => {
 		const user = userEvent.setup();
 		render(<StatefulRouteForm />);
 
-		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'mixed');
-
-		expect(screen.getByText('Balance tunnels, bridges, and outside paths.')).toBeInTheDocument();
 		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'touch-grass');
 
-		expect(screen.getByText('Go outside as much as possible.')).toBeInTheDocument();
+		expect(screen.getByText('Use the shortest possible route, inside or outside.')).toBeInTheDocument();
 	});
 
 	it('allows tunnelling preference to be changed without submitting', async () => {
 		const user = userEvent.setup();
 		const props = renderRouteForm();
 
-		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'mixed');
+		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'touch-grass');
 
-		expect(props.onTunnellingPreferenceChange).toHaveBeenCalledWith('mixed');
+		expect(props.onTunnellingPreferenceChange).toHaveBeenCalledWith('touch-grass');
 		expect(props.onSubmit).not.toHaveBeenCalled();
 	});
 
