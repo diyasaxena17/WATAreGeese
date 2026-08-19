@@ -29,6 +29,8 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 
 	const [startBuilding, setStartBuilding] = useState<BuildingSearchResult | null>(null);
 	const [endBuilding, setEndBuilding] = useState<BuildingSearchResult | null>(null);
+	const [startFloor, setStartFloor] = useState<string | null>(null);
+	const [endFloor, setEndFloor] = useState<string | null>(null);
 
 	const [hasRoute, setHasRoute] = useState(false);
 	const [route, setRoute] = useState<Route | null>(null);
@@ -43,8 +45,8 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
-	const startFloorOption = useMemo(() => toFloorOption(startBuilding, buildingFloorOptions), [startBuilding, buildingFloorOptions]);
-	const endFloorOption = useMemo(() => toFloorOption(endBuilding, buildingFloorOptions), [endBuilding, buildingFloorOptions]);
+	const startFloorOption = useMemo(() => toFloorOption(startBuilding, startFloor, buildingFloorOptions), [startBuilding, startFloor, buildingFloorOptions]);
+	const endFloorOption = useMemo(() => toFloorOption(endBuilding, endFloor, buildingFloorOptions), [endBuilding, endFloor, buildingFloorOptions]);
 
 	const startLocation = useMemo(() => mapRenderer.syncStartLocation({
 		building: startBuildingOption,
@@ -103,16 +105,30 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 		clearDisplayedRoute();
 		setStartBuilding(endBuilding);
 		setEndBuilding(startBuilding);
+		setStartFloor(endFloor);
+		setEndFloor(startFloor);
 	};
 
 	const handleStartBuildingChange = (building: BuildingSearchResult) => {
 		clearDisplayedRoute();
 		setStartBuilding(building);
+		setStartFloor(defaultFloor(floorsForBuilding(building, buildingFloorOptions)));
 	};
 
 	const handleEndBuildingChange = (building: BuildingSearchResult) => {
 		clearDisplayedRoute();
 		setEndBuilding(building);
+		setEndFloor(defaultFloor(floorsForBuilding(building, buildingFloorOptions)));
+	};
+
+	const handleStartFloorChange = (floor: string) => {
+		clearDisplayedRoute();
+		setStartFloor(floor);
+	};
+
+	const handleEndFloorChange = (floor: string) => {
+		clearDisplayedRoute();
+		setEndFloor(floor);
 	};
 
 	const clearDisplayedRoute = () => {
@@ -130,8 +146,12 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 		<RouteForm
 			from={startBuilding}
 			to={endBuilding}
+			fromFloor={startFloor}
+			toFloor={endFloor}
 			onFromChange={handleStartBuildingChange}
 			onToChange={handleEndBuildingChange}
+			onFromFloorChange={handleStartFloorChange}
+			onToFloorChange={handleEndFloorChange}
 			onSwap={handleSwapLocations}
 			onSubmit={handleSubmit}
 		/>
@@ -313,11 +333,15 @@ function toBuildingOption(building: BuildingSearchResult | null): OptionType | n
 	return { value: building.buildingCode, label: building.label };
 }
 
-function toFloorOption(building: BuildingSearchResult | null, buildingFloorOptions: Map<string, string[]>): OptionType | null {
-	if(!building) return null;
-	const floor = defaultFloor(buildingFloorOptions.get(building.buildingCode) ?? building.floors);
-	if(!floor) return null;
+function toFloorOption(building: BuildingSearchResult | null, floor: string | null, buildingFloorOptions: Map<string, string[]>): OptionType | null {
+	if(!building || !floor) return null;
+	const availableFloors = floorsForBuilding(building, buildingFloorOptions);
+	if(!availableFloors.includes(floor)) return null;
 	return { value: floor, label: floor };
+}
+
+function floorsForBuilding(building: BuildingSearchResult, buildingFloorOptions: Map<string, string[]>) {
+	return buildingFloorOptions.get(building.buildingCode) ?? building.floors;
 }
 
 function defaultFloor(floors: string[]) {

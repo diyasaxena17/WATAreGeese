@@ -7,14 +7,16 @@ import { LocationService, UserPosition } from '../features/location/types';
 import HomePage from './HomePage';
 
 const recenterUserLocation = vi.fn();
+const syncStartLocation = vi.fn(() => null);
+const syncEndLocation = vi.fn(() => null);
 
 vi.mock('../map-rendering', () => ({
 	useMapRenderer: () => ({
 		mapElement: <div>Map area</div>,
 		isReady: true,
 		canRenderDirections: false,
-		syncStartLocation: () => null,
-		syncEndLocation: () => null,
+		syncStartLocation,
+		syncEndLocation,
 		setLocationMarkers: vi.fn(),
 		displayRoute: vi.fn(() => () => {}),
 		recenterUserLocation
@@ -47,6 +49,8 @@ function deferred<T>() {
 describe('HomePage current location UX', () => {
 	beforeEach(() => {
 		recenterUserLocation.mockClear();
+		syncStartLocation.mockClear();
+		syncEndLocation.mockClear();
 	});
 
 	it('does not request location on page load and exposes an accessible control', () => {
@@ -117,5 +121,22 @@ describe('HomePage current location UX', () => {
 
 		expect(await screen.findByText(/Current location is unavailable/i)).toBeInTheDocument();
 		expect(screen.getAllByRole('button', { name: /tochoose destination/i })).toHaveLength(2);
+	});
+
+	it('passes the selected start floor into map location sync for routing', async () => {
+		const user = userEvent.setup();
+		const service = makeService(position);
+
+		render(<HomePage locationService={service} />);
+
+		await user.click(screen.getAllByRole('button', { name: /fromchoose starting point/i })[0]);
+		await user.type(screen.getByRole('searchbox', { name: /search starting point/i }), 'DC');
+		await user.click(screen.getByRole('button', { name: /dcwilliam g\. davis/i }));
+		await user.selectOptions(screen.getAllByLabelText(/from floor/i)[0], '2');
+
+		expect(syncStartLocation).toHaveBeenLastCalledWith(expect.objectContaining({
+			building: expect.objectContaining({ value: 'DC' }),
+			floor: expect.objectContaining({ value: '2' })
+		}));
 	});
 });
