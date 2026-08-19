@@ -174,13 +174,14 @@ export default function HomePage() {
 						/>
 						{hasRoute && !showInput ? (
 							<div className="space-y-4">
-								<RouteSummary
-									route={route}
-									from={toRouteEndpoint(startBuilding)}
-									to={toRouteEndpoint(endBuilding)}
-									onChangeRoute={showRouteForm}
-								/>
-								{showDirections ? renderDirectionsPanel('desktop') : null}
+								{showDirections ? renderDirectionsPanel('desktop') : (
+									<RouteSummary
+										route={route}
+										from={toRouteEndpoint(startBuilding)}
+										to={toRouteEndpoint(endBuilding)}
+										onChangeRoute={showRouteForm}
+									/>
+								)}
 							</div>
 						) : renderForm()}
 						<a
@@ -224,13 +225,14 @@ export default function HomePage() {
 					<div className="space-y-4">
 						{showInput ? renderForm() : (
 							<div className="space-y-4">
-								<RouteSummary
-									route={route}
-									from={toRouteEndpoint(startBuilding)}
-									to={toRouteEndpoint(endBuilding)}
-									onChangeRoute={showRouteForm}
-								/>
-								{showDirections ? renderDirectionsPanel('mobile') : null}
+								{showDirections ? renderDirectionsPanel('mobile') : (
+									<RouteSummary
+										route={route}
+										from={toRouteEndpoint(startBuilding)}
+										to={toRouteEndpoint(endBuilding)}
+										onChangeRoute={showRouteForm}
+									/>
+								)}
 							</div>
 						)}
 						{hasRoute ? (
