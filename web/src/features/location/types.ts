@@ -18,3 +18,11 @@ export type LocationRequestOptions = {
 export type LocationService = {
     getCurrentPosition: (options?: LocationRequestOptions) => Promise<UserPosition>;
 };
+
+export type UserLocationStatus =
+    | 'idle'
+    | 'requesting'
+    | 'available'
+    | 'denied'
+    | 'unavailable'
+    | 'error';

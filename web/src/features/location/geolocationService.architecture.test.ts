@@ -23,5 +23,7 @@ describe('location feature boundary', () => {
         expect(source).not.toContain('Dijkstra');
         expect(source).not.toContain('buildings.json');
         expect(source).not.toContain('paths.json');
+        expect(source).not.toContain('localStorage');
+        expect(source).not.toContain('document.cookie');
     });
 });
