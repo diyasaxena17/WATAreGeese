@@ -7,7 +7,29 @@ import LocationField from '../../components/ui/LocationField';
 import LocationSearchSurface from './LocationSearchSurface';
 
 export type RouteEndpoint = 'from' | 'to';
-export type TunnellingPreference = 'no-the-geese' | 'touch-grass';
+export type TunnellingPreference = 'no-the-geese' | 'mixed' | 'touch-grass';
+
+const TUNNELLING_PREFERENCES: {
+	value: TunnellingPreference;
+	label: string;
+	description: string;
+}[] = [
+	{
+		value: 'no-the-geese',
+		label: 'NO THE GEESE',
+		description: 'Tunnel at all cost.'
+	},
+	{
+		value: 'mixed',
+		label: 'mixed',
+		description: 'Balance tunnels, bridges, and outside paths.'
+	},
+	{
+		value: 'touch-grass',
+		label: 'touch grass',
+		description: 'Go outside as much as possible.'
+	}
+];
 
 export type RouteFormProps = {
 	from: BuildingSearchResult | null;
@@ -42,6 +64,7 @@ export default function RouteForm({
 	const fromFieldRef = useRef<HTMLButtonElement>(null);
 	const toFieldRef = useRef<HTMLButtonElement>(null);
 	const activeLabel = activeEndpoint == 'from' ? 'Starting point' : 'Destination';
+	const selectedTunnellingPreference = TUNNELLING_PREFERENCES.find(preference => preference.value == tunnellingPreference);
 
 	const closeSearch = () => {
 		const endpoint = activeEndpoint;
@@ -108,9 +131,17 @@ export default function RouteForm({
 					value={tunnellingPreference}
 					onChange={event => onTunnellingPreferenceChange(event.target.value as TunnellingPreference)}
 				>
-					<option value="no-the-geese">NO THE GEESE</option>
-					<option value="touch-grass">touch grass</option>
+					{TUNNELLING_PREFERENCES.map(preference => (
+						<option key={preference.value} value={preference.value}>
+							{preference.label}
+						</option>
+					))}
 				</select>
+				{selectedTunnellingPreference ? (
+					<p className="mt-1 text-wg-body-secondary">
+						{selectedTunnellingPreference.description}
+					</p>
+				) : null}
 			</label>
 
 			<Button
