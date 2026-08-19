@@ -46,7 +46,7 @@ The intended pattern is one shared map/content tree with responsive surfaces:
 
 ## Accessibility Expectations
 
-Interactive controls should have visible focus states, keyboard-safe behavior, and approximately 44px touch targets. Icon-only actions require accessible labels. Components should accept composition props such as `className` without depending on app state, routing, campus data, or Google Maps.
+Interactive controls should have visible focus states, keyboard-safe behavior, and approximately 44px touch targets. Icon-only actions require accessible labels. Components should accept composition props such as `className` without depending on app state, routing, campus data, or a specific map provider.
 
 ## Local Showcase
 

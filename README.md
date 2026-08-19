@@ -44,6 +44,9 @@ npm install
 npm run dev
 ```
 
+The development map uses configurable OpenStreetMap-compatible tiles through
+Leaflet and does not require a Google Maps key or any mapping API key.
+
 Run tests:
 
 ```sh

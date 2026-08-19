@@ -1,62 +1,35 @@
-# React + TypeScript + Vite
+# WATAreGeese Web
+
+WATAreGeese uses React, TypeScript, Vite, Tailwind, Leaflet, and the inherited
+Waterloo campus routing data.
+
+## Local Development
+
+Install dependencies and start Vite:
+
+```sh
+npm install
+npm run dev
+```
+
+The active map stack uses configurable OpenStreetMap-compatible tiles through
+Leaflet. Local development does not require a Google Maps key or any mapping API
+key.
 
 ## Tests
 
-Run the routing regression suite with:
+Run the regression suite with:
 
 ```sh
 npm test
 ```
 
-The tests exercise the inherited WATIsGrass routing engine through the public
-`Dijkstra.calculateRoute(...)` entry point using the checked-in campus GeoJSON
-data.
+The tests exercise campus-data selectors, building search, UI behavior, map
+configuration, and the inherited WATIsGrass routing engine using the checked-in
+campus GeoJSON data.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Build
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```sh
+npm run build
 ```

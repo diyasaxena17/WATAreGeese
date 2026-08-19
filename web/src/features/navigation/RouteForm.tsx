@@ -83,7 +83,7 @@ export default function RouteForm({
 			</Button>
 
 			{activeEndpoint ? (
-				<div className="fixed inset-x-0 bottom-0 z-50 h-[82svh] rounded-t-sheet border border-border bg-surface p-4 shadow-sheet md:absolute md:inset-x-0 md:top-0 md:h-[min(36rem,calc(100vh-8rem))] md:rounded-panel md:shadow-panel">
+				<div className="fixed inset-x-0 bottom-0 z-[1200] h-[82svh] rounded-t-sheet border border-border bg-surface p-4 shadow-sheet md:absolute md:inset-x-0 md:top-0 md:h-[min(36rem,calc(100vh-8rem))] md:rounded-panel md:shadow-panel">
 					<LocationSearchSurface
 						label={activeLabel}
 						onSelect={selectBuilding}

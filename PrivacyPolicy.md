@@ -18,7 +18,7 @@ Our app does not use cookies or similar tracking technologies to collect informa
 
 ## 4. Third-Party Services
 
-Our application uses the Google Maps API to provide map-related functionalities. We are not responsible for the privacy practices of Google Maps API. Please refer to Google's privacy policy for more information.
+Our application uses OpenStreetMap-compatible map tiles to provide map-related functionality. Tile providers may receive standard web requests from your browser when map tiles load. WATAreGeese does not operate those third-party services and is not responsible for their privacy practices.
 
 ## 5. Changes to This Privacy Policy
 

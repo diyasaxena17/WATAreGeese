@@ -19,4 +19,17 @@ describe('AppShell', () => {
         expect(screen.getByText('Sheet content')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /recenter/i })).toBeInTheDocument();
     });
+
+    it('layers mobile sheet and map controls above Leaflet panes', () => {
+        render(
+            <AppShell
+                map={<div>Map area</div>}
+                sheet={<div>Sheet content</div>}
+                mapControls={<button type="button">Recenter</button>}
+            />
+        );
+
+        expect(screen.getByText('Sheet content').parentElement).toHaveClass('z-[1100]');
+        expect(screen.getByRole('button', { name: /recenter/i }).parentElement).toHaveClass('z-[1100]');
+    });
 });
