@@ -5,18 +5,25 @@ import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../ma
 import { Route } from '../algorithm/dijkstra';
 import AppShell from '../components/layout/AppShell';
 import Button from '../components/ui/Button';
+import MapControlButton from '../components/ui/MapControlButton';
 import Panel from '../components/ui/Panel';
 import Sheet from '../components/ui/Sheet';
 import SectionHeader from '../components/ui/SectionHeader';
 import DirectionsPanel from '../features/directions/DirectionsPanel';
 import RouteSummary from '../features/directions/RouteSummary';
 import { RouteEndpointSummary } from '../features/directions/types';
+import { LocationService, useUserLocation } from '../features/location';
 import RouteForm from '../features/navigation/RouteForm';
 import { NavigationService } from '../features/navigation/navigationService';
 import { useMapRenderer } from '../map-rendering';
 
-export default function HomePage() {
+export type HomePageProps = {
+	locationService?: LocationService;
+};
+
+export default function HomePage({ locationService }: HomePageProps = {}) {
 	const navigationService = useMemo(() => new NavigationService(), []);
+	const userLocation = useUserLocation(locationService);
 	const startEndLocations = useMemo(() => getStartEndLocations(), []);
 	const buildingFloorOptions = useMemo(() => getBuildingFloorOptions(), []);
 
@@ -32,7 +39,7 @@ export default function HomePage() {
 	const [showDirections, setShowDirections] = useState(false);
 	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
 	const sheetDragStartY = useRef<number | null>(null);
-	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection);
+	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection, userLocation.position);
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
@@ -162,9 +169,40 @@ export default function HomePage() {
 		sheetDragStartY.current = null;
 	};
 
+	const handleCurrentLocation = async () => {
+		if(userLocation.position) {
+			mapRenderer.recenterUserLocation(userLocation.position);
+			return;
+		}
+
+		const position = await userLocation.requestLocation();
+		if(position) mapRenderer.recenterUserLocation(position);
+	};
+
+	const locationMessage = locationStatusMessage(userLocation.status, userLocation.error?.code);
+
 	return (
 		<AppShell
 			map={mapRenderer.mapElement}
+			mapControls={
+				<div className="flex flex-col items-end gap-2">
+					<MapControlButton
+						aria-label={userLocation.position ? 'Recenter on current location' : 'Use current location'}
+						icon={userLocation.status == 'requesting' ? '…' : '⌖'}
+						pressed={userLocation.status == 'available'}
+						disabled={userLocation.status == 'requesting'}
+						onClick={handleCurrentLocation}
+					/>
+					{locationMessage ? (
+						<div
+							role={userLocation.status == 'requesting' ? 'status' : 'alert'}
+							className="max-w-64 rounded-panel border border-border bg-surface px-3 py-2 text-wg-body-secondary shadow-panel"
+						>
+							{locationMessage}
+						</div>
+					) : null}
+				</div>
+			}
 			panel={
 				<Panel className="m-4 shadow-none">
 					<div className="space-y-4">
@@ -174,13 +212,14 @@ export default function HomePage() {
 						/>
 						{hasRoute && !showInput ? (
 							<div className="space-y-4">
-								<RouteSummary
-									route={route}
-									from={toRouteEndpoint(startBuilding)}
-									to={toRouteEndpoint(endBuilding)}
-									onChangeRoute={showRouteForm}
-								/>
-								{showDirections ? renderDirectionsPanel('desktop') : null}
+								{showDirections ? renderDirectionsPanel('desktop') : (
+									<RouteSummary
+										route={route}
+										from={toRouteEndpoint(startBuilding)}
+										to={toRouteEndpoint(endBuilding)}
+										onChangeRoute={showRouteForm}
+									/>
+								)}
 							</div>
 						) : renderForm()}
 						<a
@@ -224,13 +263,14 @@ export default function HomePage() {
 					<div className="space-y-4">
 						{showInput ? renderForm() : (
 							<div className="space-y-4">
-								<RouteSummary
-									route={route}
-									from={toRouteEndpoint(startBuilding)}
-									to={toRouteEndpoint(endBuilding)}
-									onChangeRoute={showRouteForm}
-								/>
-								{showDirections ? renderDirectionsPanel('mobile') : null}
+								{showDirections ? renderDirectionsPanel('mobile') : (
+									<RouteSummary
+										route={route}
+										from={toRouteEndpoint(startBuilding)}
+										to={toRouteEndpoint(endBuilding)}
+										onChangeRoute={showRouteForm}
+									/>
+								)}
 							</div>
 						)}
 						{hasRoute ? (
@@ -245,6 +285,18 @@ export default function HomePage() {
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ? null : ''}
 		</AppShell>
 	);
+}
+
+function locationStatusMessage(status: ReturnType<typeof useUserLocation>['status'], code?: string) {
+	if(status == 'requesting') return 'Finding your location...';
+	if(status == 'denied') return 'Location access was denied. Enable location permission in your browser to show your position.';
+	if(status == 'unavailable') {
+		if(code == 'unsupported-browser') return 'Current location is not supported by this browser.';
+		if(code == 'timeout') return 'Current location took too long. You can try again.';
+		return 'Current location is unavailable. Building-to-building routing still works.';
+	}
+	if(status == 'error') return 'Current location could not be shown. Building-to-building routing still works.';
+	return null;
 }
 
 function toRouteEndpoint(building: BuildingSearchResult | null): RouteEndpointSummary | null {

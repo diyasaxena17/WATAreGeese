@@ -13,6 +13,7 @@ import {
 	RouteLayers
 } from './LeafletMapLayers';
 import UserLocationMarker from './UserLocationMarker';
+import UserLocationViewport from './UserLocationViewport';
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {
@@ -34,6 +35,7 @@ export function useLeafletMapRenderer(
 	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
 	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
 	const [endMarkerLocation, setEndMarkerLocation] = useState<Location | null>(null);
+	const [recenterTarget, setRecenterTarget] = useState<UserPosition | null>(null);
 
 	return useMemo(() => ({
 		mapElement: (
@@ -53,6 +55,7 @@ export function useLeafletMapRenderer(
 				<RouteLayers route={displayedRoute} highlightedDirection={highlightedDirection} />
 				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />
 				<UserLocationMarker position={userPosition} />
+				<UserLocationViewport target={recenterTarget} />
 			</MapContainer>
 		),
 		isReady: true,
@@ -66,6 +69,9 @@ export function useLeafletMapRenderer(
 		displayRoute: route => {
 			setDisplayedRoute(route);
 			return () => setDisplayedRoute(null);
+		},
+		recenterUserLocation: position => {
+			setRecenterTarget(position ?? userPosition);
 		}
-	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, startMarkerLocation, userPosition]);
+	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, recenterTarget, startMarkerLocation, userPosition]);
 }

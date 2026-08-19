@@ -28,6 +28,7 @@ describe('LeafletMapRenderer', () => {
 	it('renders current user location from normalized location data', () => {
 		expect(source).toContain('UserLocationMarker');
 		expect(source).toContain('userPosition');
+		expect(source).toContain('recenterUserLocation');
 		expect(source).not.toContain('navigator.geolocation');
 	});
 });

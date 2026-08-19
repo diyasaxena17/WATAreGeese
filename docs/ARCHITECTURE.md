@@ -29,6 +29,21 @@ building selection
 Leaflet renders campus data and calculated route geometry. It does not calculate
 paths. Routing, navigation, and campus-data modules do not import Leaflet.
 
+## Location Flow
+
+```text
+explicit user action
+  -> useUserLocation
+  -> BrowserGeolocationService
+  -> navigator.geolocation
+  -> UserPosition
+  -> Leaflet user-location marker / recenter
+```
+
+Location remains in memory in the browser. WATAreGeese does not store location
+history, does not send location to routing services, and does not use GPS as a
+routing endpoint yet.
+
 ## Campus Data
 
 Raw inherited GeoJSON remains under `web/src/campus-data`. Consumers should use
