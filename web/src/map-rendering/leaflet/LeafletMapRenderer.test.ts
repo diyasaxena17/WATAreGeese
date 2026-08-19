@@ -24,4 +24,10 @@ describe('LeafletMapRenderer', () => {
 		expect(source).not.toContain('new Dijkstra');
 		expect(source).not.toContain('new AdjacencyList');
 	});
+
+	it('renders current user location from normalized location data', () => {
+		expect(source).toContain('UserLocationMarker');
+		expect(source).toContain('userPosition');
+		expect(source).not.toContain('navigator.geolocation');
+	});
 });
