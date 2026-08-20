@@ -8,5 +8,6 @@ describe('mapConfig', () => {
 		expect(mapConfig.attribution).toContain('OpenStreetMap');
 		expect(mapConfig.center).toEqual([43.4718, -80.543]);
 		expect(mapConfig.defaultZoom).toBe(16);
+		expect(mapConfig.userLocationZoom).toBe(17);
 	});
 });

@@ -11,8 +11,14 @@ function renderRouteForm(overrides = {}) {
 	const props = {
 		from: null,
 		to: null,
+		fromFloor: null,
+		toFloor: null,
+		tunnellingPreference: 'no-the-geese' as const,
 		onFromChange: vi.fn(),
 		onToChange: vi.fn(),
+		onFromFloorChange: vi.fn(),
+		onToFloorChange: vi.fn(),
+		onTunnellingPreferenceChange: vi.fn(),
 		onSwap: vi.fn(),
 		onSubmit: vi.fn((event: FormEvent<HTMLFormElement>) => event.preventDefault()),
 		...overrides
@@ -25,16 +31,33 @@ function renderRouteForm(overrides = {}) {
 function StatefulRouteForm({ onSubmit = vi.fn((event: FormEvent<HTMLFormElement>) => event.preventDefault()) }) {
 	const [from, setFrom] = useState<BuildingSearchResult | null>(null);
 	const [to, setTo] = useState<BuildingSearchResult | null>(null);
+	const [fromFloor, setFromFloor] = useState<string | null>(null);
+	const [toFloor, setToFloor] = useState<string | null>(null);
+	const [tunnellingPreference, setTunnellingPreference] = useState<'no-the-geese' | 'touch-grass'>('no-the-geese');
 
 	return (
 		<RouteForm
 			from={from}
 			to={to}
-			onFromChange={setFrom}
-			onToChange={setTo}
+			fromFloor={fromFloor}
+			toFloor={toFloor}
+			tunnellingPreference={tunnellingPreference}
+			onFromChange={building => {
+				setFrom(building);
+				setFromFloor(defaultFloor(building.floors));
+			}}
+			onToChange={building => {
+				setTo(building);
+				setToFloor(defaultFloor(building.floors));
+			}}
+			onFromFloorChange={setFromFloor}
+			onToFloorChange={setToFloor}
+			onTunnellingPreferenceChange={setTunnellingPreference}
 			onSwap={() => {
 				setFrom(to);
 				setTo(from);
+				setFromFloor(toFloor);
+				setToFloor(fromFloor);
 			}}
 			onSubmit={onSubmit}
 		/>
@@ -46,6 +69,42 @@ describe('RouteForm', () => {
 		renderRouteForm();
 
 		expect(screen.getByRole('button', { name: /find route/i })).toBeDisabled();
+	});
+
+	it('shows disabled floor fields before buildings are selected', () => {
+		renderRouteForm();
+
+		expect(screen.getByLabelText(/from floor/i)).toBeDisabled();
+		expect(screen.getByLabelText(/to floor/i)).toBeDisabled();
+	});
+
+	it('shows tunnelling preference options', () => {
+		renderRouteForm();
+
+		expect(screen.getByLabelText(/tunnelling preference/i)).toHaveValue('no-the-geese');
+		expect(screen.getByRole('option', { name: 'NO THE GEESE' })).toBeInTheDocument();
+		expect(screen.getByRole('option', { name: 'touch grass' })).toBeInTheDocument();
+		expect(screen.queryByRole('option', { name: 'mixed' })).not.toBeInTheDocument();
+		expect(screen.getByText('Tunnel at all cost.')).toBeInTheDocument();
+	});
+
+	it('explains the selected tunnelling preference', async () => {
+		const user = userEvent.setup();
+		render(<StatefulRouteForm />);
+
+		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'touch-grass');
+
+		expect(screen.getByText('Use the shortest possible route, inside or outside.')).toBeInTheDocument();
+	});
+
+	it('allows tunnelling preference to be changed without submitting', async () => {
+		const user = userEvent.setup();
+		const props = renderRouteForm();
+
+		await user.selectOptions(screen.getByLabelText(/tunnelling preference/i), 'touch-grass');
+
+		expect(props.onTunnellingPreferenceChange).toHaveBeenCalledWith('touch-grass');
+		expect(props.onSubmit).not.toHaveBeenCalled();
 	});
 
 	it('searches buildings by alias and selects From', async () => {
@@ -91,13 +150,36 @@ describe('RouteForm', () => {
 		await user.click(screen.getByRole('button', { name: /dcwilliam g\. davis/i }));
 
 		expect(screen.getByRole('button', { name: /find route/i })).toBeDisabled();
-		expect(screen.getByRole('button', { name: /fromdcwilliam g\. davis/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /fromdcwilliam g\. davis.*floor 1/i })).toBeInTheDocument();
 
 		await user.click(screen.getByRole('button', { name: /tochoose destination/i }));
 		await user.type(screen.getByRole('searchbox', { name: /search destination/i }), 'E7');
 		await user.click(screen.getByRole('button', { name: /e7engineering 7/i }));
 
 		expect(screen.getByRole('button', { name: /find route/i })).toBeEnabled();
+	});
+
+	it('allows selected floors to be changed', async () => {
+		const user = userEvent.setup();
+		const props = renderRouteForm({
+			from: searchBuildings('DC')[0],
+			fromFloor: '1'
+		});
+
+		await user.selectOptions(screen.getByLabelText(/from floor/i), '2');
+
+		expect(props.onFromFloorChange).toHaveBeenCalledWith('2');
+	});
+
+	it('requires selected floors before submitting', () => {
+		renderRouteForm({
+			from: searchBuildings('DC')[0],
+			to: searchBuildings('E7')[0],
+			fromFloor: null,
+			toFloor: '1'
+		});
+
+		expect(screen.getByRole('button', { name: /find route/i })).toBeDisabled();
 	});
 
 	it('reverses selected buildings when swap is clicked', async () => {
@@ -112,8 +194,8 @@ describe('RouteForm', () => {
 		await user.click(screen.getByRole('button', { name: /e7engineering 7/i }));
 		await user.click(screen.getByRole('button', { name: /swap start and destination/i }));
 
-		expect(screen.getByRole('button', { name: /frome7engineering 7/i })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: /todcwilliam g\. davis/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /frome7engineering 7.*floor 1/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /todcwilliam g\. davis.*floor 1/i })).toBeInTheDocument();
 	});
 
 	it('shows a useful building list before the query is typed', async () => {
@@ -179,7 +261,9 @@ describe('RouteForm', () => {
 		const user = userEvent.setup();
 		const props = renderRouteForm({
 			from: searchBuildings('DC')[0],
-			to: searchBuildings('E7')[0]
+			to: searchBuildings('E7')[0],
+			fromFloor: '1',
+			toFloor: '1'
 		});
 
 		await user.click(screen.getByRole('button', { name: /swap start and destination/i }));
@@ -192,7 +276,9 @@ describe('RouteForm', () => {
 		const user = userEvent.setup();
 		const props = renderRouteForm({
 			from: searchBuildings('DC')[0],
-			to: searchBuildings('E7')[0]
+			to: searchBuildings('E7')[0],
+			fromFloor: '1',
+			toFloor: '1'
 		});
 
 		await user.click(screen.getByRole('button', { name: /find route/i }));
@@ -200,3 +286,7 @@ describe('RouteForm', () => {
 		expect(props.onSubmit).toHaveBeenCalledTimes(1);
 	});
 });
+
+function defaultFloor(floors: string[]) {
+	return floors.includes('1') ? '1' : floors[0] ?? null;
+}

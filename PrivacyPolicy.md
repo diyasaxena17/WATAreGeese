@@ -8,9 +8,16 @@ At WATAreGeese, we respect your privacy and are committed to protecting any pers
 
 We do not collect, store, or share any personal information from users of our application.
 
+If you choose to use the current-location feature, your browser or device may
+provide WATAreGeese with your approximate latitude, longitude, and accuracy.
+This is requested only after you explicitly activate the location control.
+
 ## 2. Use of Information
 
-Since we do not collect any user data, we do not use personal information for any purpose.
+Location data is processed client-side in your browser to show your position on
+the map and recenter the map. WATAreGeese does not store location history, does
+not send your location to an external routing service, and does not require
+location permission for building-to-building routing.
 
 ## 3. Cookies
 

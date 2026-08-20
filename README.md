@@ -47,6 +47,11 @@ npm run dev
 The development map uses configurable OpenStreetMap-compatible tiles through
 Leaflet and does not require a Google Maps key or any mapping API key.
 
+Current location is optional. WATAreGeese asks for browser location only after
+you explicitly press the current-location control, processes that position in
+the browser, and does not store location history. Building-to-building routing
+works without granting location permission.
+
 Run tests:
 
 ```sh

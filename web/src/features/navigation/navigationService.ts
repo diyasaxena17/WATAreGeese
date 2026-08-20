@@ -11,14 +11,17 @@ export class NavigationService {
     }
 
     calculateRoute(request: RouteRequest): RouteResult {
-        const mode = request.mode ?? 'shortest';
-        if(mode != 'shortest') throw new Error(`Unsupported route mode: ${mode}`);
+        const mode = request.mode ?? 'avoid-outside';
+        if(mode != 'avoid-outside' && mode != 'shortest') throw new Error(`Unsupported route mode: ${mode}`);
+        const comparatorKey = mode == 'avoid-outside'
+            ? 'COMPARE_BY_TIME_OUTSIDE_THEN_TIME'
+            : 'COMPARE_BY_DISTANCE';
 
         return {
             route: this.router.calculateRoute(
                 request.start,
                 request.end,
-                Dijkstra.COMPARATORS.get('COMPARE_BY_TIME_OUTSIDE_THEN_TIME')
+                Dijkstra.COMPARATORS.get(comparatorKey)
             )
         };
     }

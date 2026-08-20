@@ -7,12 +7,36 @@ import LocationField from '../../components/ui/LocationField';
 import LocationSearchSurface from './LocationSearchSurface';
 
 export type RouteEndpoint = 'from' | 'to';
+export type TunnellingPreference = 'no-the-geese' | 'touch-grass';
+
+const TUNNELLING_PREFERENCES: {
+	value: TunnellingPreference;
+	label: string;
+	description: string;
+}[] = [
+	{
+		value: 'no-the-geese',
+		label: 'NO THE GEESE',
+		description: 'Tunnel at all cost.'
+	},
+	{
+		value: 'touch-grass',
+		label: 'touch grass',
+		description: 'Use the shortest possible route, inside or outside.'
+	}
+];
 
 export type RouteFormProps = {
 	from: BuildingSearchResult | null;
 	to: BuildingSearchResult | null;
+	fromFloor: string | null;
+	toFloor: string | null;
+	tunnellingPreference: TunnellingPreference;
 	onFromChange: (building: BuildingSearchResult) => void;
 	onToChange: (building: BuildingSearchResult) => void;
+	onFromFloorChange: (floor: string) => void;
+	onToFloorChange: (floor: string) => void;
+	onTunnellingPreferenceChange: (preference: TunnellingPreference) => void;
 	onSwap: () => void;
 	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
@@ -20,8 +44,14 @@ export type RouteFormProps = {
 export default function RouteForm({
 	from,
 	to,
+	fromFloor,
+	toFloor,
+	tunnellingPreference,
 	onFromChange,
 	onToChange,
+	onFromFloorChange,
+	onToFloorChange,
+	onTunnellingPreferenceChange,
 	onSwap,
 	onSubmit
 }: RouteFormProps) {
@@ -29,6 +59,7 @@ export default function RouteForm({
 	const fromFieldRef = useRef<HTMLButtonElement>(null);
 	const toFieldRef = useRef<HTMLButtonElement>(null);
 	const activeLabel = activeEndpoint == 'from' ? 'Starting point' : 'Destination';
+	const selectedTunnellingPreference = TUNNELLING_PREFERENCES.find(preference => preference.value == tunnellingPreference);
 
 	const closeSearch = () => {
 		const endpoint = activeEndpoint;
@@ -53,8 +84,15 @@ export default function RouteForm({
 					label="From"
 					state={from ? 'selected' : 'empty'}
 					primaryText={from?.buildingCode ?? 'Choose starting point'}
-					secondaryText={from?.officialName}
+					secondaryText={from ? `${from.officialName}${fromFloor ? ` · Floor ${fromFloor}` : ''}` : undefined}
 					onClick={() => setActiveEndpoint('from')}
+				/>
+				<FloorSelect
+					label="From floor"
+					value={fromFloor}
+					floors={from?.floors ?? []}
+					disabled={!from}
+					onChange={onFromFloorChange}
 				/>
 				<div className="flex justify-center">
 					<IconButton
@@ -69,15 +107,42 @@ export default function RouteForm({
 					label="To"
 					state={to ? 'selected' : 'empty'}
 					primaryText={to?.buildingCode ?? 'Choose destination'}
-					secondaryText={to?.officialName}
+					secondaryText={to ? `${to.officialName}${toFloor ? ` · Floor ${toFloor}` : ''}` : undefined}
 					onClick={() => setActiveEndpoint('to')}
 				/>
+				<FloorSelect
+					label="To floor"
+					value={toFloor}
+					floors={to?.floors ?? []}
+					disabled={!to}
+					onChange={onToFloorChange}
+				/>
 			</div>
+
+			<label className="block">
+				<span className="wg-label mb-1 block">Tunnelling Preference</span>
+				<select
+					className="wg-control min-h-touch w-full px-3 py-2 text-wg-body"
+					value={tunnellingPreference}
+					onChange={event => onTunnellingPreferenceChange(event.target.value as TunnellingPreference)}
+				>
+					{TUNNELLING_PREFERENCES.map(preference => (
+						<option key={preference.value} value={preference.value}>
+							{preference.label}
+						</option>
+					))}
+				</select>
+				{selectedTunnellingPreference ? (
+					<p className="mt-1 text-wg-body-secondary">
+						{selectedTunnellingPreference.description}
+					</p>
+				) : null}
+			</label>
 
 			<Button
 				type="submit"
 				className="w-full"
-				disabled={!from || !to}
+				disabled={!from || !to || !fromFloor || !toFloor}
 			>
 				Find route
 			</Button>
@@ -92,5 +157,34 @@ export default function RouteForm({
 				</div>
 			) : null}
 		</form>
+	);
+}
+
+type FloorSelectProps = {
+	label: string;
+	value: string | null;
+	floors: string[];
+	disabled: boolean;
+	onChange: (floor: string) => void;
+};
+
+function FloorSelect({ label, value, floors, disabled, onChange }: FloorSelectProps) {
+	return (
+		<label className="block">
+			<span className="wg-label mb-1 block">{label}</span>
+			<select
+				className="wg-control min-h-touch w-full px-3 py-2 text-wg-body disabled:cursor-not-allowed disabled:opacity-55"
+				value={value ?? ''}
+				disabled={disabled}
+				onChange={event => onChange(event.target.value)}
+			>
+				<option value="" disabled>Choose floor</option>
+				{floors.map(floor => (
+					<option key={floor} value={floor}>
+						Floor {floor}
+					</option>
+				))}
+			</select>
+		</label>
 	);
 }

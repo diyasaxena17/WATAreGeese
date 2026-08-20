@@ -76,7 +76,7 @@ describe('WATIsGrass routing engine', () => {
 	it('exposes NavigationService.calculateRoute as the navigation interface', () => {
 		const start = campusLocation('ML', '1');
 		const end = campusLocation('SCH', '1');
-		const result = navigationService.calculateRoute({ start, end, mode: 'shortest' });
+		const result = navigationService.calculateRoute({ start, end, mode: 'avoid-outside' });
 
 		expect(result.route).not.toBeNull();
 		expect(result.route?.graphLocations[0].location.equals(start)).toBe(true);
@@ -241,4 +241,51 @@ describe('WATIsGrass routing engine', () => {
 		`);
 		expect(route.graphLocations.at(-1)?.timeOutside).toBeGreaterThan(0);
 	});
+
+	it('uses shortest routing for touch-grass style AL to B1 navigation', () => {
+		const start = campusLocation('AL', '1');
+		const end = campusLocation('B1', '1');
+		const route = navigationService.calculateRoute({ start, end, mode: 'shortest' }).route;
+		const noTheGeeseRoute = navigationService.calculateRoute({ start, end, mode: 'avoid-outside' }).route;
+
+		if(!route) throw new Error('Expected route from AL to B1');
+		if(!noTheGeeseRoute) throw new Error('Expected avoid-outside route from AL to B1');
+
+		expectRouteEndpoints(route, start, end);
+		expect(route.graphLocations.at(-1)?.distance).toBeLessThan(noTheGeeseRoute.graphLocations.at(-1)?.distance ?? Infinity);
+		expect(routeModes(route)).toContain('walkway');
+		expect(routeModes(route)).toMatchInlineSnapshot(`
+			[
+			  "hallway",
+			  "walkway",
+			  "stairs",
+			  "hallway",
+			  "bridge",
+			  "hallway",
+			  "stairs",
+			  "hallway",
+			  "door",
+			  "hallway",
+			  "stairs",
+			]
+		`);
+		expect(routeFloors(route)).toMatchInlineSnapshot(`
+			[
+			  "AL|1",
+			  "AL|1",
+			  "NH|1",
+			  "NH|3",
+			  "NH|3",
+			  "STC|3",
+			  "STC|3",
+			  "B2|2",
+			  "B2|2",
+			  "B1|2",
+			  "B1|2",
+			  "B1|1",
+			]
+		`);
+		expect(route.graphLocations.at(-1)?.timeOutside).toBeGreaterThan(0);
+	});
+
 });

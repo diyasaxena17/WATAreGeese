@@ -1,6 +1,7 @@
 export const mapConfig = {
 	center: [43.4718, -80.543] as [number, number],
 	defaultZoom: 16,
+	userLocationZoom: 17,
 	minZoom: 14,
 	maxBounds: [
 		[43.3, -80.7],

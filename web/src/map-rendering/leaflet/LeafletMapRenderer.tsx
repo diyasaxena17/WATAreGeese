@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 
 import { mapConfig } from '../../features/map/config/mapConfig';
+import { UserPosition } from '../../features/location';
 import { Location, Route } from '../../routing/types';
 import { MapLocationSyncRequest, MapRenderer } from '../types';
 import {
@@ -11,6 +12,8 @@ import {
 	LocationMarkers,
 	RouteLayers
 } from './LeafletMapLayers';
+import UserLocationMarker from './UserLocationMarker';
+import UserLocationViewport from './UserLocationViewport';
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {
@@ -24,10 +27,15 @@ function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	return request.startEndLocations.get(`${request.building.value}|${request.floor.value}`) ?? null;
 }
 
-export function useLeafletMapRenderer(hasRoute = false, highlightedDirection: number | null = null): MapRenderer {
+export function useLeafletMapRenderer(
+	hasRoute = false,
+	highlightedDirection: number | null = null,
+	userPosition: UserPosition | null = null
+): MapRenderer {
 	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
 	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
 	const [endMarkerLocation, setEndMarkerLocation] = useState<Location | null>(null);
+	const [recenterTarget, setRecenterTarget] = useState<UserPosition | null>(null);
 
 	return useMemo(() => ({
 		mapElement: (
@@ -44,8 +52,10 @@ export function useLeafletMapRenderer(hasRoute = false, highlightedDirection: nu
 					attribution={mapConfig.attribution}
 				/>
 				<CampusLayers dimmed={hasRoute} />
-				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />
 				<RouteLayers route={displayedRoute} highlightedDirection={highlightedDirection} />
+				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />
+				<UserLocationMarker position={userPosition} />
+				<UserLocationViewport target={recenterTarget} />
 			</MapContainer>
 		),
 		isReady: true,
@@ -59,6 +69,9 @@ export function useLeafletMapRenderer(hasRoute = false, highlightedDirection: nu
 		displayRoute: route => {
 			setDisplayedRoute(route);
 			return () => setDisplayedRoute(null);
+		},
+		recenterUserLocation: position => {
+			setRecenterTarget(position ?? userPosition);
 		}
-	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, startMarkerLocation]);
+	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, recenterTarget, startMarkerLocation, userPosition]);
 }

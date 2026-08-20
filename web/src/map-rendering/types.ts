@@ -1,5 +1,6 @@
 import { Dispatch, ReactNode, SetStateAction } from 'react';
 
+import { UserPosition } from '../features/location';
 import { Route, Location } from '../routing/types';
 import { OptionType } from '../map/locations';
 
@@ -24,4 +25,5 @@ export type MapRenderer = {
 	syncEndLocation: (request: MapLocationSyncRequest) => Location | null;
 	setLocationMarkers: (start: Location | null, end: Location | null) => void;
 	displayRoute: (route: Route | null) => RouteDisplayCleanup;
+	recenterUserLocation: (position?: UserPosition | null) => void;
 };
