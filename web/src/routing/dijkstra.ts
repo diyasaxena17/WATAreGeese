@@ -20,12 +20,18 @@ export class Dijkstra {
     static readonly FLOOR_DESCEND_SPEED = 14;
 
     static readonly COMPARATOR_OPTIONS = [
+        { value: 'COMPARE_BY_DISTANCE', label: 'Shortest'},
         { value: 'COMPARE_BY_TIME_OUTSIDE_THEN_TIME', label: 'At all costs'},
         { value: 'COMPARE_BY_TIME', label: 'Where Possible'}
     ];
 
     static readonly COMPARATORS = new Map<string, ICompare<GraphLocation>>([
         [
+            'COMPARE_BY_DISTANCE',
+            (a: GraphLocation, b: GraphLocation) => {
+                return (a.distance < b.distance ? -1 : 1);
+            }
+        ], [
             'COMPARE_BY_TIME',
             (a: GraphLocation, b: GraphLocation) => {
                 return (a.time < b.time ? -1 : 1);

@@ -15,7 +15,7 @@ export class NavigationService {
         if(mode != 'avoid-outside' && mode != 'shortest') throw new Error(`Unsupported route mode: ${mode}`);
         const comparatorKey = mode == 'avoid-outside'
             ? 'COMPARE_BY_TIME_OUTSIDE_THEN_TIME'
-            : 'COMPARE_BY_TIME';
+            : 'COMPARE_BY_DISTANCE';
 
         return {
             route: this.router.calculateRoute(
