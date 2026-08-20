@@ -234,7 +234,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 				<Panel className="m-4 shadow-none">
 					<div className="space-y-4">
 						<SectionHeader
-							title="WATAreGeese 🪿"
+							title={<BrandTitle />}
 							description="Waterloo, without the outside."
 						/>
 						{hasRoute && !showInput ? (
@@ -283,7 +283,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 					}}
 					header={
 						<div>
-							<SectionHeader title="WATAreGeese 🪿" description="Waterloo, without the outside." />
+							<SectionHeader title={<BrandTitle />} description="Waterloo, without the outside." />
 						</div>
 					}
 				>
@@ -311,6 +311,15 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 		>
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ? null : ''}
 		</AppShell>
+	);
+}
+
+function BrandTitle() {
+	return (
+		<span className="inline-flex items-center gap-2">
+			<span aria-hidden="true" className="text-xl leading-none">🪿</span>
+			<span>WATAreGeese</span>
+		</span>
 	);
 }
 
