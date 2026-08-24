@@ -187,31 +187,27 @@
 
   .wg-hat-map {
     position: relative;
-  }
-
-  .wg-hat-map::before,
-  .wg-hat-map::after {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 520;
-    width: clamp(0.875rem, 1.8vw, 1.5rem);
-    pointer-events: none;
-    content: "";
-    opacity: 0.86;
     background:
-      linear-gradient(90deg, rgb(255 255 255 / 0.24), rgb(255 255 255 / 0)),
+      linear-gradient(135deg, rgb(243 166 214 / 0.26), rgb(104 65 184 / 0.18)),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg opacity='0.96'%3E%3Cpath d='M14 8h28v14h14v14H42v14h14v14H28V50H14V36H0V22h14z' fill='%23f3a6d6'/%3E%3Cpath d='M56 0h28v28H70v14H56V28H42V14h14z' fill='%23d979c7'/%3E%3Cpath d='M42 50h28v14h14v20H56V70H42z' fill='%238f6be8'/%3E%3Cpath d='M0 56h14V42h28v14H28v14H14v14H0z' fill='%236841b8'/%3E%3C/g%3E%3C/svg%3E");
     background-size: 84px 84px;
   }
 
-  .wg-hat-map::before {
-    left: 0;
+  .wg-hat-map .leaflet-tile-pane {
+    background:
+      linear-gradient(135deg, rgb(243 166 214 / 0.24), rgb(104 65 184 / 0.16)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' viewBox='0 0 84 84'%3E%3Cg opacity='0.96'%3E%3Cpath d='M14 8h28v14h14v14H42v14h14v14H28V50H14V36H0V22h14z' fill='%23f3a6d6'/%3E%3Cpath d='M56 0h28v28H70v14H56V28H42V14h14z' fill='%23d979c7'/%3E%3Cpath d='M42 50h28v14h14v20H56V70H42z' fill='%238f6be8'/%3E%3Cpath d='M0 56h14V42h28v14H28v14H14v14H0z' fill='%236841b8'/%3E%3C/g%3E%3C/svg%3E");
+    background-color: var(--color-hat-tile-rose);
+    background-size: 84px 84px;
   }
 
-  .wg-hat-map::after {
-    right: 0;
-    transform: scaleX(-1);
+  .wg-hat-map .leaflet-tile {
+    opacity: 0;
+    transition: opacity 260ms var(--motion-easing-standard);
+  }
+
+  .wg-hat-map .leaflet-tile-loaded {
+    opacity: 1;
   }
 
   .wg-hat-zoom-control .leaflet-control {
