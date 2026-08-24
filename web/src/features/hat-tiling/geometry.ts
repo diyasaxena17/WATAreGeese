@@ -20,24 +20,22 @@ export type HatClusterDefinition = {
 
 const unit = 12;
 const height = unit * Math.sqrt(3) / 2;
-
-export const hatPolygon: Point[] = [
-	{ x: 0, y: 2 * height },
-	{ x: unit, y: 0 },
-	{ x: 3 * unit, y: 0 },
-	{ x: 3.5 * unit, y: height },
-	{ x: 4.5 * unit, y: height },
-	{ x: 5 * unit, y: 2 * height },
-	{ x: 4 * unit, y: 2 * height },
-	{ x: 4.5 * unit, y: 3 * height },
-	{ x: 3.5 * unit, y: 5 * height },
-	{ x: 2.5 * unit, y: 5 * height },
-	{ x: 2 * unit, y: 6 * height },
-	{ x: 0, y: 6 * height },
-	{ x: 0.5 * unit, y: 5 * height },
-	{ x: -0.5 * unit, y: 5 * height },
-	{ x: 0.5 * unit, y: 3 * height }
+const canonicalHatEdges: Point[] = [
+	{ x: 0, y: -Math.sqrt(3) },
+	{ x: -1, y: 0 },
+	{ x: -0.5, y: -Math.sqrt(3) / 2 },
+	{ x: -1.5, y: Math.sqrt(3) / 2 },
+	{ x: 0, y: Math.sqrt(3) },
+	{ x: -1, y: 0 },
+	{ x: -0.5, y: Math.sqrt(3) / 2 },
+	{ x: 1.5, y: Math.sqrt(3) / 2 },
+	{ x: 1.5, y: -Math.sqrt(3) / 2 },
+	{ x: 0.5, y: Math.sqrt(3) / 2 },
+	{ x: 2, y: 0 },
+	{ x: 0.5, y: -Math.sqrt(3) / 2 }
 ];
+
+export const hatPolygon: Point[] = buildCanonicalHatPolygon(unit);
 
 export const hatClusters: Record<HatClusterKind, HatClusterDefinition> = {
 	H1: {
@@ -137,4 +135,18 @@ function rotatePoint(point: Point, degrees: number): Point {
 
 function normalizeDegrees(degrees: number): number {
 	return ((degrees % 360) + 360) % 360;
+}
+
+function buildCanonicalHatPolygon(scale: number): Point[] {
+	let x = 0;
+	let y = 2 * height;
+	const points: Point[] = [{ x, y }];
+
+	canonicalHatEdges.forEach(edge => {
+		x += edge.x * scale;
+		y += edge.y * scale;
+		points.push({ x, y });
+	});
+
+	return points;
 }

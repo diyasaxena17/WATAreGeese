@@ -1,21 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="168" viewBox="0 0 192 168">
   <title>Hat monotile loading pattern</title>
-  <desc>Deterministic loading placeholder inspired by the 2023 hat aperiodic monotile substitution tiling. Based on reusable hat outlines with reflected and unreflected placements.</desc>
+  <desc>Deterministic loading placeholder inspired by the 2023 hat aperiodic monotile substitution tiling. The base outline uses the canonical 13-sided Tile(1, sqrt(3)) hat path from the public Smith-Myers-Kaplan-Goodman-Strauss resources.</desc>
   <rect width="192" height="168" fill="#d7d9d2"/>
   <defs>
-    <path id="hat" d="M0 20.8 12 0h24l6 10.4h12l6 10.4H48l6 10.4-12 20.8H30l-6 10.4H0l6-10.4H-6L6 31.2 0 20.8Z"/>
+    <path id="hat" d="M 0 0 l 0 -20.7846097 -12 0 -6 -10.3923048 -18 10.3923048 0 20.7846097 -12 0 -6 10.3923048 18 10.3923048 18 -10.3923048 6 10.3923048 24 0 6 -10.3923048 z"/>
   </defs>
   <g fill="#d7d9d2" stroke-linejoin="round" stroke-linecap="round">
-    <use href="#hat" x="12" y="8" stroke="#d979c7" stroke-width="1.05"/>
-    <use href="#hat" x="72" y="32" transform="scale(-1 1) translate(-144 0) rotate(180 72 32)" stroke="#8f6be8" stroke-width="1.05"/>
-    <use href="#hat" x="36" y="68" transform="rotate(60 36 68)" stroke="#f3a6d6" stroke-width="1.05"/>
-    <use href="#hat" x="108" y="72" transform="scale(-1 1) translate(-216 0) rotate(240 108 72)" stroke="#6841b8" stroke-width="1.05"/>
-    <use href="#hat" x="-24" y="76" transform="scale(-1 1) translate(48 0) rotate(300 -24 76)" stroke="#8f6be8" stroke-width="1.05"/>
-    <use href="#hat" x="42" y="118" transform="rotate(120 42 118)" stroke="#d979c7" stroke-width="1.05"/>
-    <use href="#hat" x="120" y="120" transform="scale(-1 1) translate(-240 0)" stroke="#f3a6d6" stroke-width="1.05"/>
-    <use href="#hat" x="168" y="40" transform="rotate(300 168 40)" stroke="#6841b8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(60 34)" stroke="#d979c7" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(132 64) scale(-1 1) rotate(180)" stroke="#8f6be8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(76 102) rotate(60)" stroke="#f3a6d6" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(160 118) scale(-1 1) rotate(240)" stroke="#6841b8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(8 110) scale(-1 1) rotate(300)" stroke="#8f6be8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(76 174) rotate(120)" stroke="#d979c7" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(170 182) scale(-1 1)" stroke="#f3a6d6" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(204 44) rotate(300)" stroke="#6841b8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(-24 42) rotate(180)" stroke="#d979c7" stroke-width="1.05"/>
   </g>
-  <g fill="none" stroke="#8f6be8" stroke-width="0.55" opacity="0.72">
-    <path d="M12 28.8h60M48 8l30 52M18 60h48M108 72l-36 62M0 104h54M132 20h60M144 128h48"/>
+  <g fill="none" stroke="#8f6be8" stroke-width="0.55" opacity="0.7">
+    <path d="M60 34v-20.8M48 13.2H36M42 2.8 24 13.2M24 34H12M18 44.4 36 54.8M42 65.2H66"/>
+    <path d="M0 84H192M0 126H192M96 0V168"/>
   </g>
 </svg>

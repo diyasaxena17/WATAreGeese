@@ -4,7 +4,18 @@ import { getHatClusterTiles, hatClusters, hatPolygon, substituteCluster } from '
 
 describe('hat monotile substitution geometry', () => {
 	it('defines one reusable hat polygon', () => {
-		expect(hatPolygon.length).toBeGreaterThan(10);
+		expect(hatPolygon).toHaveLength(13);
+	});
+
+	it('defines the canonical Tile(1, sqrt(3)) hat edge lengths', () => {
+		const sideLengths = hatPolygon.map((point, index) => {
+			const next = hatPolygon[(index + 1) % hatPolygon.length];
+			return Math.hypot(next.x - point.x, next.y - point.y);
+		});
+
+		expect(countApprox(sideLengths, 12)).toBe(6);
+		expect(countApprox(sideLengths, 12 * Math.sqrt(3))).toBe(6);
+		expect(countApprox(sideLengths, 24)).toBe(1);
 	});
 
 	it('defines reusable H1, H2, H7, and H8 clusters', () => {
@@ -27,3 +38,7 @@ describe('hat monotile substitution geometry', () => {
 		expect(getHatClusterTiles('H1', 1)).toEqual(tiles);
 	});
 });
+
+function countApprox(values: number[], target: number) {
+	return values.filter(value => Math.abs(value - target) < 0.0001).length;
+}
