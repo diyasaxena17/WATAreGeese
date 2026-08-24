@@ -31,4 +31,9 @@ describe('LeafletMapRenderer', () => {
 		expect(source).toContain('recenterUserLocation');
 		expect(source).not.toContain('navigator.geolocation');
 	});
+
+	it('uses the custom WATAreGeese zoom control instead of Leaflet defaults', () => {
+		expect(source).toContain('LeafletZoomControl');
+		expect(source).toContain('zoomControl={false}');
+	});
 });

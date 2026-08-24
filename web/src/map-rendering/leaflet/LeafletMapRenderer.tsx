@@ -12,6 +12,7 @@ import {
 	LocationMarkers,
 	RouteLayers
 } from './LeafletMapLayers';
+import LeafletZoomControl from './LeafletZoomControl';
 import UserLocationMarker from './UserLocationMarker';
 import UserLocationViewport from './UserLocationViewport';
 
@@ -45,12 +46,13 @@ export function useLeafletMapRenderer(
 				minZoom={mapConfig.minZoom}
 				maxBounds={mapConfig.maxBounds}
 				className="h-full w-full"
-				zoomControl
+				zoomControl={false}
 			>
 				<TileLayer
 					url={mapConfig.tileUrl}
 					attribution={mapConfig.attribution}
 				/>
+				<LeafletZoomControl />
 				<CampusLayers dimmed={hasRoute} />
 				<RouteLayers route={displayedRoute} highlightedDirection={highlightedDirection} />
 				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />

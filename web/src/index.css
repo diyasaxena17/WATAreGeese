@@ -19,6 +19,10 @@
     --color-warning: #a86400;
     --color-danger: #b42318;
     --color-focus-ring: #8a6a00;
+    --color-hat-tile-rose: #f3a6d6;
+    --color-hat-tile-pink: #d979c7;
+    --color-hat-tile-purple: #8f6be8;
+    --color-hat-tile-plum: #6841b8;
 
     --text-page-title: 1.375rem;
     --text-section-title: 1rem;
@@ -174,5 +178,37 @@
     cursor: not-allowed;
     opacity: 0.55;
     transform: none;
+  }
+
+  .wg-hat-zoom-control {
+    margin-top: 0.75rem;
+    margin-left: 0.75rem;
+  }
+
+  .wg-hat-zoom-control .leaflet-control {
+    background:
+      linear-gradient(135deg, rgb(255 255 255 / 0.82), rgb(255 255 255 / 0.64)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg opacity='0.92'%3E%3Cpath d='M18 6h18v12h12v18H36v18H18V42H6V24h12z' fill='%23f3a6d6'/%3E%3Cpath d='M54 18h12v18H54v12H36V36H24V18h18V6h12z' fill='%23d979c7'/%3E%3Cpath d='M18 42h18v12h12v12H30V54H18z' fill='%238f6be8'/%3E%3Cpath d='M54 48h12v18H48V54H36V42h18z' fill='%236841b8'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 90px 90px;
+    backdrop-filter: blur(8px);
+  }
+
+  .wg-hat-zoom-button {
+    border-color: rgb(255 255 255 / 0.7);
+    background: rgb(255 255 255 / 0.86);
+    color: var(--color-hat-tile-plum);
+    font-size: 1.25rem;
+    font-weight: 800;
+    box-shadow: 0 1px 2px rgb(104 65 184 / 0.18);
+  }
+
+  .wg-hat-zoom-button:hover {
+    border-color: var(--color-hat-tile-pink);
+    background: color-mix(in srgb, var(--color-hat-tile-rose) 18%, white);
+    color: var(--color-hat-tile-plum);
+  }
+
+  .wg-hat-zoom-button:active {
+    background: color-mix(in srgb, var(--color-hat-tile-purple) 22%, white);
   }
 }
