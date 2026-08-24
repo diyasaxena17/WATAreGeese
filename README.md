@@ -1,10 +1,22 @@
 # WATAreGeese
 
-WATAreGeese is an unofficial Waterloo indoor-routing project for finding paths through campus buildings, tunnels, bridges, hallways, stairs, doors, open connections, and outdoor walkways.
+WATAreGeese is an [VERY MUCH still in progress] unofficial Waterloo indoor-routing project for finding paths through campus buildings, tunnels, bridges, hallways, stairs, doors, open connections, and outdoor walkways.
 
-Built upon and inspired by the open-source work of WATIsGrass and WATisRain.
+Built upon and inspired by the open-source work of WATIsGrass and WATisRain [THANK YOU!!].
 
-## Project Lineage
+Check out the map here: wataregeese.vercel.app/
+
+## Project philosophy
+
+WATAreGeese aims to preserve the useful Waterloo indoor-routing work from previous projects while modernizing the UX and building toward features such as GPS and route preferences.
+
+### Some fun stuff
+
+- WATAreGeese is whimsy, so i try to keep adding fun elements
+- tried to implement the hat tile shape across the front end: harder than i thought it would be turns out.
+- i made the tiling pink and purple to rep the Math and Eng Fac colours
+
+## Project lineage
 
 WATAreGeese follows this project lineage:
 
@@ -22,49 +34,12 @@ WATisRain, created by Lucky Bai and contributors, established important earlier 
 
 WATAreGeese is not an official successor to either project.
 
-## Project Philosophy
 
-WATAreGeese aims to preserve the useful Waterloo indoor-routing work from previous projects while modernizing the user experience and building toward features such as location awareness and route preferences.
-
-## Unofficial Status
-
-WATAreGeese is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by the University of Waterloo.
 
 ## Development Status
 
 This project is in active early development. The inherited routing engine and campus data are being stabilized with regression tests before larger product or UI changes are made.
 
-## Local Development
-
-Install dependencies and run the web app:
-
-```sh
-cd web
-npm install
-npm run dev
-```
-
-The development map uses configurable OpenStreetMap-compatible tiles through
-Leaflet and does not require a Google Maps key or any mapping API key.
-
-Current location is optional. WATAreGeese asks for browser location only after
-you explicitly press the current-location control, processes that position in
-the browser, and does not store location history. Building-to-building routing
-works without granting location permission.
-
-Run tests:
-
-```sh
-cd web
-npm test
-```
-
-Build for production:
-
-```sh
-cd web
-npm run build
-```
 
 ## License
 
