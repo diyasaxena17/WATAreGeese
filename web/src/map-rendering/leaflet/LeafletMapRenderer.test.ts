@@ -34,6 +34,7 @@ describe('LeafletMapRenderer', () => {
 
 	it('uses the custom WATAreGeese zoom control instead of Leaflet defaults', () => {
 		expect(source).toContain('LeafletZoomControl');
+		expect(source).toContain('wg-hat-map');
 		expect(source).toContain('zoomControl={false}');
 	});
 });

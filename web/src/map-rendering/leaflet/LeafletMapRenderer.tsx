@@ -45,7 +45,7 @@ export function useLeafletMapRenderer(
 				zoom={mapConfig.defaultZoom}
 				minZoom={mapConfig.minZoom}
 				maxBounds={mapConfig.maxBounds}
-				className="h-full w-full"
+				className="wg-hat-map h-full w-full"
 				zoomControl={false}
 			>
 				<TileLayer
