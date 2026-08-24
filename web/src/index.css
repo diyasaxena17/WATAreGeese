@@ -23,7 +23,7 @@
     --color-hat-tile-pink: #d979c7;
     --color-hat-tile-purple: #8f6be8;
     --color-hat-tile-plum: #6841b8;
-    --hat-monotile-outline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='84' viewBox='0 0 96 84'%3E%3Cg fill='%23d7d9d2' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M24 8h24l6 10h12l6 10H60l6 10-12 20H42l-6 10H12l6-10H6l12-20-6-10h12l-6-10z' stroke='%23d979c7' stroke-width='1.35'/%3E%3Cpath d='M24 8l12 20h24M18 18l18 10-18 10M72 28L54 58M18 58h24l-6-30M54 18L42 58M36 68l6-10' fill='none' stroke='%238f6be8' stroke-width='0.85' opacity='0.82'/%3E%3Cpath d='M54 18h12l-6 10M18 38h18l-18 20' fill='none' stroke='%23f3a6d6' stroke-width='0.75' opacity='0.88'/%3E%3C/g%3E%3C/svg%3E");
+    --hat-monotile-outline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='84' viewBox='0 0 96 84'%3E%3Crect width='96' height='84' fill='%23d7d9d2'/%3E%3Cg fill='none' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M0 28h12L24 8h24l6 10h12l6 10h24M0 56h12l6-10H6l12-20-6-10H0M96 56H84l-6 10H54L42 84M48 0l6 10h12l6 10H60l6 10-12 20H42l-6 10H12L0 84M96 0L84 20l6 10H78l-6 10 12 20h12' stroke='%23d979c7' stroke-width='1.05'/%3E%3Cpath d='M24 8l12 20h24M18 18l18 10-18 10M72 28L54 58M18 58h24l-6-30M54 18L42 58M36 68l6-10M0 28h24M72 28h24M12 84l6-10h24M54 0l6 10h18' stroke='%238f6be8' stroke-width='0.65' opacity='0.82'/%3E%3Cpath d='M54 18h12l-6 10M18 38h18l-18 20M78 40h18M0 56h18' stroke='%23f3a6d6' stroke-width='0.58' opacity='0.88'/%3E%3C/g%3E%3C/svg%3E");
 
     --text-page-title: 1.375rem;
     --text-section-title: 1rem;
