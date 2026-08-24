@@ -231,7 +231,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 				</div>
 			}
 			panel={
-				<Panel className="m-4 shadow-none">
+				<Panel className="wg-routing-panel-pattern m-4 shadow-none">
 					<div className="space-y-4">
 						<SectionHeader
 							title={<BrandTitle />}
@@ -275,6 +275,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 				</div>
 			) : (
 				<Sheet
+					className="wg-routing-panel-pattern"
 					handleLabel="Drag route planner down to minimize"
 					onHandlePointerDown={handleSheetDragStart}
 					onHandlePointerUp={handleSheetDragEnd}
