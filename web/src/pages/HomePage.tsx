@@ -250,10 +250,12 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 							</div>
 						) : renderForm()}
 						<a
-							className="wg-body-secondary inline-flex underline decoration-border underline-offset-4 hover:text-text-primary"
+							className="wg-body-secondary inline-flex items-center gap-2 underline decoration-border underline-offset-4 hover:text-text-primary"
 							href="https://github.com/diyasaxena17/WATAreGeese"
+							aria-label="Open WATAreGeese project repository on GitHub"
 						>
-							About / credits
+							<GitHubLogo />
+							<span>Project repo</span>
 						</a>
 						{hasRoute ? (
 							<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
@@ -321,6 +323,19 @@ function BrandTitle() {
 			<span aria-hidden="true" className="text-xl leading-none">🪿</span>
 			<span>WATAreGeese</span>
 		</span>
+	);
+}
+
+function GitHubLogo() {
+	return (
+		<svg
+			aria-hidden="true"
+			className="size-4 shrink-0"
+			viewBox="0 0 16 16"
+			fill="currentColor"
+		>
+			<path d="M8 0.2a8 8 0 0 0-2.53 15.59c0.4 0.07 0.55-0.17 0.55-0.38v-1.49c-2.23 0.49-2.7-0.95-2.7-0.95-0.36-0.92-0.89-1.17-0.89-1.17-0.73-0.5 0.06-0.49 0.06-0.49 0.8 0.06 1.23 0.83 1.23 0.83 0.72 1.22 1.87 0.87 2.33 0.66 0.07-0.52 0.28-0.87 0.51-1.07-1.78-0.2-3.64-0.89-3.64-3.95 0-0.87 0.31-1.59 0.82-2.15-0.08-0.2-0.36-1.02 0.08-2.12 0 0 0.67-0.21 2.2 0.82A7.6 7.6 0 0 1 8 4.58c0.68 0 1.36 0.09 2 0.27 1.53-1.03 2.2-0.82 2.2-0.82 0.44 1.1 0.16 1.92 0.08 2.12 0.51 0.56 0.82 1.27 0.82 2.15 0 3.07-1.87 3.75-3.65 3.95 0.29 0.25 0.54 0.73 0.54 1.48v2.2c0 0.21 0.14 0.46 0.55 0.38A8 8 0 0 0 8 0.2Z" />
+		</svg>
 	);
 }
 
