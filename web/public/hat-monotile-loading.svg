@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="168" viewBox="0 0 192 168">
+  <title>Hat monotile loading pattern</title>
+  <desc>Deterministic loading placeholder inspired by the 2023 hat aperiodic monotile substitution tiling. The base outline uses the canonical 13-sided Tile(1, sqrt(3)) hat path from the public Smith-Myers-Kaplan-Goodman-Strauss resources.</desc>
+  <rect width="192" height="168" fill="#d7d9d2"/>
+  <defs>
+    <path id="hat" d="M 0 0 l 0 -20.7846097 -12 0 -6 -10.3923048 -18 10.3923048 0 20.7846097 -12 0 -6 10.3923048 18 10.3923048 18 -10.3923048 6 10.3923048 24 0 6 -10.3923048 z"/>
+  </defs>
+  <g fill="#d7d9d2" stroke-linejoin="round" stroke-linecap="round">
+    <use href="#hat" transform="translate(60 34)" stroke="#d979c7" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(132 64) scale(-1 1) rotate(180)" stroke="#8f6be8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(76 102) rotate(60)" stroke="#f3a6d6" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(160 118) scale(-1 1) rotate(240)" stroke="#6841b8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(8 110) scale(-1 1) rotate(300)" stroke="#8f6be8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(76 174) rotate(120)" stroke="#d979c7" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(170 182) scale(-1 1)" stroke="#f3a6d6" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(204 44) rotate(300)" stroke="#6841b8" stroke-width="1.05"/>
+    <use href="#hat" transform="translate(-24 42) rotate(180)" stroke="#d979c7" stroke-width="1.05"/>
+  </g>
+  <g fill="none" stroke="#8f6be8" stroke-width="0.55" opacity="0.7">
+    <path d="M60 34v-20.8M48 13.2H36M42 2.8 24 13.2M24 34H12M18 44.4 36 54.8M42 65.2H66"/>
+    <path d="M0 84H192M0 126H192M96 0V168"/>
+  </g>
+</svg>
