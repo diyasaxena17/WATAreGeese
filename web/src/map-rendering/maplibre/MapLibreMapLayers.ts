@@ -1,36 +1,10 @@
-import { GeoJSONSourceSpecification, LayerSpecification, StyleSpecification } from 'maplibre-gl';
+import { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { CAMPUS_FEATURE_TYPES, CampusFeatureType, PathsGeoJson } from '../../campus-data/schema';
 import { GraphLocation, Route } from '../../routing/types';
 
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
-
-export function createCampusMapStyle(tileUrl: string, attribution: string): StyleSpecification {
-	return {
-		version: 8,
-		sources: {
-			basemap: {
-				type: 'raster',
-				tiles: [tileUrl],
-				tileSize: 256,
-				attribution
-			}
-		},
-		layers: [
-			{
-				id: 'basemap',
-				type: 'raster',
-				source: 'basemap',
-				paint: {
-					'raster-opacity': 0.82,
-					'raster-saturation': -0.45,
-					'raster-contrast': -0.1
-				}
-			}
-		]
-	};
-}
 
 export function campusPathSource(paths: PathsGeoJson): GeoJSONSourceSpecification {
 	return {

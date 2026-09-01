@@ -13,10 +13,10 @@ import {
 	ROUTE_SOURCE_ID,
 	campusPathLayers,
 	campusPathSource,
-	createCampusMapStyle,
 	routeLayers,
 	routeToGeoJson
 } from './MapLibreMapLayers';
+import { createSoftCampusMapStyle } from './mapStyle';
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {
@@ -47,7 +47,7 @@ export function useMapLibreMapRenderer(
 
 		const map = new Map({
 			container: containerRef.current,
-			style: createCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
+			style: createSoftCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
 			center: [mapConfig.center[1], mapConfig.center[0]],
 			zoom: mapConfig.maplibre.camera.defaultZoom,
 			pitch: mapConfig.maplibre.camera.defaultPitch,
