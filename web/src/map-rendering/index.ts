@@ -1,5 +1,5 @@
 export { useMapLibreMapRenderer } from './maplibre/MapLibreMapRenderer';
-export { useLeafletMapRenderer as useMapRenderer } from './leaflet/LeafletMapRenderer';
+export { useMapLibreMapRenderer as useMapRenderer } from './maplibre/MapLibreMapRenderer';
 export { useLeafletMapRenderer } from './leaflet/LeafletMapRenderer';
 export type {
 	MapLocationSyncRequest,

@@ -1,6 +1,6 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { GeoJSONSource, Map } from 'maplibre-gl';
+import { GeoJSONSource, LngLatBounds, Map } from 'maplibre-gl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getBuildingOutlines, getCampusPathsGeoJson } from '../../campus-data/selectors';
@@ -120,6 +120,7 @@ export function useMapLibreMapRenderer(
 		},
 		displayRoute: route => {
 			setDisplayedRoute(route);
+			fitRouteBounds(mapRef.current, route);
 			return () => setDisplayedRoute(null);
 		},
 		recenterUserLocation: position => {
@@ -131,10 +132,33 @@ export function useMapLibreMapRenderer(
 				zoom: mapConfig.maplibre.camera.userLocationZoom,
 				pitch: mapConfig.maplibre.camera.defaultPitch,
 				bearing: mapConfig.maplibre.camera.defaultBearing,
-				duration: mapConfig.maplibre.camera.animationDurationMs
+				duration: motionDuration()
 			});
 		}
 	}), [isReady, userPosition]);
+}
+
+function fitRouteBounds(map: Map | null, route: Route | null) {
+	const coordinates = route?.graphLocations.flatMap(graphLocation => graphLocation.path) ?? [];
+	if(!map || coordinates.length == 0) return;
+
+	const bounds = coordinates.reduce(
+		(currentBounds, coordinate) => currentBounds.extend(coordinate),
+		new LngLatBounds(coordinates[0], coordinates[0])
+	);
+
+	map.fitBounds(bounds, {
+		padding: mapConfig.maplibre.camera.routeBoundsPadding,
+		maxZoom: mapConfig.maplibre.camera.routeZoom,
+		pitch: mapConfig.maplibre.camera.defaultPitch,
+		bearing: mapConfig.maplibre.camera.defaultBearing,
+		duration: motionDuration()
+	});
+}
+
+function motionDuration() {
+	if(typeof window == 'undefined') return mapConfig.maplibre.camera.animationDurationMs;
+	return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : mapConfig.maplibre.camera.animationDurationMs;
 }
 
 function updateRouteSource(map: Map | null, route: Route | null, highlightedDirection: number | null) {
