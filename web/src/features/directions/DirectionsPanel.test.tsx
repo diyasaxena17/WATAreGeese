@@ -86,7 +86,7 @@ describe('DirectionsPanel', () => {
         expect(screen.getByText('No route found')).toBeInTheDocument();
     });
 
-    it('wires shared direction rows to application highlight state', () => {
+    it('keeps clicked direction rows selected until the user clicks away', () => {
         const onHighlightDirection = vi.fn();
         const onClearHighlight = vi.fn();
         const onSelectDirection = vi.fn();
@@ -95,7 +95,7 @@ describe('DirectionsPanel', () => {
             <DirectionsPanel
                 variant="mobile"
                 route={makeRoute()}
-                selectedDirection={1}
+                selectedDirection={null}
                 onHighlightDirection={onHighlightDirection}
                 onClearHighlight={onClearHighlight}
                 onSelectDirection={onSelectDirection}
@@ -107,11 +107,91 @@ describe('DirectionsPanel', () => {
         fireEvent.click(step);
         fireEvent.mouseLeave(step);
 
-        expect(onHighlightDirection).toHaveBeenCalledWith(1);
+        expect(onHighlightDirection).not.toHaveBeenCalled();
         expect(onSelectDirection).toHaveBeenCalledWith(1);
+        expect(onClearHighlight).not.toHaveBeenCalled();
+        expect(step).not.toHaveAttribute('aria-current', 'step');
+
+        fireEvent.pointerDown(document.body);
+        expect(onClearHighlight).not.toHaveBeenCalled();
+    });
+
+    it('selects another direction step without clearing through hover state', () => {
+        const onClearHighlight = vi.fn();
+        const onSelectDirection = vi.fn();
+
+        render(
+            <DirectionsPanel
+                variant="desktop"
+                route={makeMultiStepRoute()}
+                selectedDirection={1}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={onClearHighlight}
+                onSelectDirection={onSelectDirection}
+            />
+        );
+
+        const secondStep = screen.getByRole('button', { name: /2take the bridge to e7 floor 1bridge/i });
+        fireEvent.click(secondStep);
+
+        expect(onSelectDirection).toHaveBeenCalledWith(2);
+        expect(onClearHighlight).not.toHaveBeenCalled();
+    });
+
+    it('clears the selected direction when the selected step is clicked again', () => {
+        const onClearHighlight = vi.fn();
+        const onSelectDirection = vi.fn();
+
+        render(
+            <DirectionsPanel
+                variant="desktop"
+                route={makeMultiStepRoute()}
+                selectedDirection={1}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={onClearHighlight}
+                onSelectDirection={onSelectDirection}
+            />
+        );
+
+        const selectedStep = screen.getByRole('button', { name: /1take the hallway on mc floor 1hallway/i });
+        fireEvent.click(selectedStep);
+
         expect(onClearHighlight).toHaveBeenCalledTimes(1);
-        expect(step).toHaveAttribute('aria-current', 'step');
-        expect(step).toHaveTextContent('Selected');
+        expect(onSelectDirection).not.toHaveBeenCalled();
+    });
+
+    it('toggles off a selected step when both responsive panels are mounted', () => {
+        const onClearHighlight = vi.fn();
+        const onSelectDirection = vi.fn();
+        const route = makeMultiStepRoute();
+
+        render(
+            <>
+                <DirectionsPanel
+                    variant="desktop"
+                    route={route}
+                    selectedDirection={1}
+                    onHighlightDirection={vi.fn()}
+                    onClearHighlight={onClearHighlight}
+                    onSelectDirection={onSelectDirection}
+                />
+                <DirectionsPanel
+                    variant="mobile"
+                    route={route}
+                    selectedDirection={1}
+                    onHighlightDirection={vi.fn()}
+                    onClearHighlight={onClearHighlight}
+                    onSelectDirection={onSelectDirection}
+                />
+            </>
+        );
+
+        const selectedSteps = screen.getAllByRole('button', { name: /1take the hallway on mc floor 1hallway/i });
+        fireEvent.pointerDown(selectedSteps[0]);
+        fireEvent.click(selectedSteps[0]);
+
+        expect(onClearHighlight).toHaveBeenCalledTimes(1);
+        expect(onSelectDirection).not.toHaveBeenCalled();
     });
 
     it('keeps inherited route summary formatting stable', () => {

@@ -1,10 +1,11 @@
 import { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl';
 
-import { CAMPUS_FEATURE_TYPES, CampusFeatureType, BuildingOutlineFeature, PathsGeoJson } from '../../campus-data/schema';
+import { CAMPUS_FEATURE_TYPES, CampusFeatureType, BuildingOutlineFeature, BuildingsGeoJson, PathsGeoJson } from '../../campus-data/schema';
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { GraphLocation, Route } from '../../routing/types';
 
 export const CAMPUS_BUILDING_SOURCE_ID = 'campus-building-outlines';
+export const CAMPUS_BUILDING_LABEL_SOURCE_ID = 'campus-building-labels';
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
 
@@ -27,6 +28,53 @@ export const campusBuildingExtrusionLayer: LayerSpecification = {
 		'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
 		'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
 		'fill-extrusion-opacity': 0.62
+	}
+};
+
+export function campusBuildingLabelSource(buildings: BuildingsGeoJson): GeoJSONSourceSpecification {
+	return {
+		type: 'geojson',
+		data: buildings
+	};
+}
+
+export const campusBuildingLabelLayer: LayerSpecification = {
+	id: 'campus-building-labels',
+	type: 'symbol',
+	source: CAMPUS_BUILDING_LABEL_SOURCE_ID,
+	minzoom: 15.2,
+	layout: {
+		'text-field': ['get', 'buildingCode', ['get', 'building']],
+		'text-size': [
+			'interpolate',
+			['linear'],
+			['zoom'],
+			15,
+			10,
+			18,
+			14
+		],
+		'text-font': ['Open Sans Semibold'],
+		'text-anchor': 'center',
+		'text-allow-overlap': false,
+		'text-ignore-placement': false,
+		'text-padding': 4,
+		'text-offset': [0, 0]
+	},
+	paint: {
+		'text-color': '#29332f',
+		'text-halo-color': '#f7f3ea',
+		'text-halo-width': 1.2,
+		'text-halo-blur': 0.4,
+		'text-opacity': [
+			'interpolate',
+			['linear'],
+			['zoom'],
+			15,
+			0.65,
+			17,
+			0.92
+		]
 	}
 };
 

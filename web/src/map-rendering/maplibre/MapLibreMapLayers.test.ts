@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { getBuildingOutlines } from '../../campus-data/selectors';
+import { getBuildingOutlines, getCampusBuildingsGeoJson } from '../../campus-data/selectors';
 import { CAMPUS_FEATURE_TYPES } from '../../campus-data/schema';
 import { mapConfig } from '../../features/map/config/mapConfig';
 import {
 	CAMPUS_BUILDING_SOURCE_ID,
+	CAMPUS_BUILDING_LABEL_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	ROUTE_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingLabelLayer,
+	campusBuildingLabelSource,
 	campusBuildingSource,
 	campusPathLineOpacity,
 	campusPathPointOpacity,
@@ -40,6 +43,22 @@ describe('MapLibre campus building layers', () => {
 				'fill-extrusion-opacity': 0.62
 			}
 		});
+	});
+
+	it('uses existing building point data for campus labels', () => {
+		const buildings = getCampusBuildingsGeoJson();
+		const source = campusBuildingLabelSource(buildings);
+
+		expect(source).toEqual({
+			type: 'geojson',
+			data: buildings
+		});
+		expect(campusBuildingLabelLayer).toMatchObject({
+			id: 'campus-building-labels',
+			type: 'symbol',
+			source: CAMPUS_BUILDING_LABEL_SOURCE_ID
+		});
+		expect(campusBuildingLabelLayer.layout?.['text-field']).toEqual(['get', 'buildingCode', ['get', 'building']]);
 	});
 });
 
