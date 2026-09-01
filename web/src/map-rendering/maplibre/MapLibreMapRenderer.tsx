@@ -49,7 +49,10 @@ export function useMapLibreMapRenderer(
 			container: containerRef.current,
 			style: createCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
 			center: [mapConfig.center[1], mapConfig.center[0]],
-			zoom: mapConfig.defaultZoom,
+			zoom: mapConfig.maplibre.camera.defaultZoom,
+			pitch: mapConfig.maplibre.camera.defaultPitch,
+			bearing: mapConfig.maplibre.camera.defaultBearing,
+			maxPitch: mapConfig.maplibre.camera.maxPitch,
 			minZoom: mapConfig.minZoom,
 			maxBounds: [
 				[mapConfig.maxBounds[0][1], mapConfig.maxBounds[0][0]],
@@ -117,7 +120,10 @@ export function useMapLibreMapRenderer(
 
 			mapRef.current?.easeTo({
 				center: [target.longitude, target.latitude],
-				zoom: mapConfig.userLocationZoom
+				zoom: mapConfig.maplibre.camera.userLocationZoom,
+				pitch: mapConfig.maplibre.camera.defaultPitch,
+				bearing: mapConfig.maplibre.camera.defaultBearing,
+				duration: mapConfig.maplibre.camera.animationDurationMs
 			});
 		}
 	}), [isReady, userPosition]);
