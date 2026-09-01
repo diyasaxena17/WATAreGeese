@@ -15,6 +15,8 @@ import {
 	campusBuildingExtrusionLayer,
 	campusBuildingSource,
 	campusPathLayers,
+	campusPathLineOpacity,
+	campusPathPointOpacity,
 	campusPathSource,
 	routeLayers,
 	routeToGeoJson
@@ -92,9 +94,9 @@ export function useMapLibreMapRenderer(
 	}, [displayedRoute, highlightedDirection]);
 
 	useEffect(() => {
-		const opacity = hasRoute ? 0.25 : 0.6;
-		setPaintProperty(mapRef.current, 'campus-path-lines', 'line-opacity', opacity);
-		setPaintProperty(mapRef.current, 'campus-path-points', 'circle-opacity', opacity);
+		setPaintProperty(mapRef.current, 'campus-path-line-casing', 'line-opacity', hasRoute ? 0.35 : 0.68);
+		setPaintProperty(mapRef.current, 'campus-path-lines', 'line-opacity', campusPathLineOpacity(hasRoute));
+		setPaintProperty(mapRef.current, 'campus-path-points', 'circle-opacity', campusPathPointOpacity(hasRoute));
 	}, [hasRoute]);
 
 	useEffect(() => {
@@ -142,7 +144,7 @@ function updateRouteSource(map: Map | null, route: Route | null, highlightedDire
 	(source as GeoJSONSource).setData(routeToGeoJson(route, highlightedDirection));
 }
 
-function setPaintProperty(map: Map | null, layerId: string, property: string, value: number) {
+function setPaintProperty(map: Map | null, layerId: string, property: string, value: unknown) {
 	if(!map?.getLayer(layerId)) return;
 
 	map.setPaintProperty(layerId, property, value);
