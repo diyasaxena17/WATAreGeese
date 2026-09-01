@@ -26,6 +26,22 @@ describe('HomePage routing boundary', () => {
 		expect(source).not.toContain("from '../map/updateLocation'");
 	});
 
+	it('does not import renderer implementations directly', () => {
+		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
+
+		expect(source).not.toContain('maplibre-gl');
+		expect(source).not.toContain('../map-rendering/maplibre');
+		expect(source).not.toContain('../map-rendering/leaflet');
+	});
+
+	it('keeps Leaflet as the default renderer and exposes MapLibre through the boundary', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
+
+		expect(source).toContain("export { useLeafletMapRenderer as useMapRenderer } from './leaflet/LeafletMapRenderer'");
+		expect(source).toContain("export { useLeafletMapRenderer } from './leaflet/LeafletMapRenderer'");
+		expect(source).toContain("export { useMapLibreMapRenderer } from './maplibre/MapLibreMapRenderer'");
+	});
+
 	it('uses the location hook instead of navigator geolocation directly', () => {
 		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
 
