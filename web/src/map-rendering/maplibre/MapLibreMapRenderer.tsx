@@ -3,14 +3,17 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { GeoJSONSource, Map } from 'maplibre-gl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { getCampusPathsGeoJson } from '../../campus-data/selectors';
+import { getBuildingOutlines, getCampusPathsGeoJson } from '../../campus-data/selectors';
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { UserPosition } from '../../features/location';
 import { Location, Route } from '../../routing/types';
 import { MapLocationSyncRequest, MapRenderer } from '../types';
 import {
+	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	ROUTE_SOURCE_ID,
+	campusBuildingExtrusionLayer,
+	campusBuildingSource,
 	campusPathLayers,
 	campusPathSource,
 	routeLayers,
@@ -63,6 +66,9 @@ export function useMapLibreMapRenderer(
 		mapRef.current = map;
 
 		map.on('load', () => {
+			map.addSource(CAMPUS_BUILDING_SOURCE_ID, campusBuildingSource(getBuildingOutlines()));
+			map.addLayer(campusBuildingExtrusionLayer);
+
 			map.addSource(CAMPUS_PATH_SOURCE_ID, campusPathSource(getCampusPathsGeoJson()));
 			campusPathLayers.forEach(layer => map.addLayer(layer));
 

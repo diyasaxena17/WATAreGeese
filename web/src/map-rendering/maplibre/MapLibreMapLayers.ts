@@ -1,10 +1,34 @@
 import { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl';
 
-import { CAMPUS_FEATURE_TYPES, CampusFeatureType, PathsGeoJson } from '../../campus-data/schema';
+import { CAMPUS_FEATURE_TYPES, CampusFeatureType, BuildingOutlineFeature, PathsGeoJson } from '../../campus-data/schema';
+import { mapConfig } from '../../features/map/config/mapConfig';
 import { GraphLocation, Route } from '../../routing/types';
 
+export const CAMPUS_BUILDING_SOURCE_ID = 'campus-building-outlines';
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
+
+export function campusBuildingSource(outlines: BuildingOutlineFeature[]): GeoJSONSourceSpecification {
+	return {
+		type: 'geojson',
+		data: {
+			type: 'FeatureCollection',
+			features: outlines
+		}
+	};
+}
+
+export const campusBuildingExtrusionLayer: LayerSpecification = {
+	id: 'campus-building-extrusions',
+	type: 'fill-extrusion',
+	source: CAMPUS_BUILDING_SOURCE_ID,
+	paint: {
+		'fill-extrusion-color': '#d8d0c3',
+		'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
+		'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
+		'fill-extrusion-opacity': 0.62
+	}
+};
 
 export function campusPathSource(paths: PathsGeoJson): GeoJSONSourceSpecification {
 	return {
