@@ -38,7 +38,15 @@ WATAreGeese is not an official successor to either project.
 
 ## Development Status
 
-This project is in active early development. The inherited routing engine and campus data are being stabilized with regression tests before larger product or UI changes are made.
+This project is an active early prototype. The inherited routing engine is covered by regression tests, the map stack has moved to Leaflet, building search and route preferences are in place, and the app is deployed for public testing.
+
+Still in progress:
+
+- improving route quality and floor-aware behavior
+- polishing the mobile route-selection and directions experience
+- refining the Hat monotile visual system
+- expanding GPS/current-location features without using GPS as a routing start point yet
+- continuing to validate inherited Waterloo campus data
 
 
 ## License

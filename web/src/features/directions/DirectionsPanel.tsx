@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 import { Route } from '../../routing/types';
 import DirectionsList from './DirectionsList';
 import RouteSummary from './RouteSummary';
@@ -22,12 +24,29 @@ export default function DirectionsPanel({
     from,
     to,
     selectedDirection,
-    onHighlightDirection,
     onClearHighlight,
     onSelectDirection
 }: DirectionsPanelProps) {
+    const panelRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if(selectedDirection == null) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            const target = event.target;
+            if(!(target instanceof Element)) return;
+            if(target.closest('[data-direction-step]')) return;
+
+            onClearHighlight();
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [onClearHighlight, selectedDirection]);
+
     return (
         <div
+            ref={panelRef}
             id={variant == 'mobile' ? 'mobile-directions' : 'directions'}
             className={variant == 'mobile'
                 ? 'block lg:hidden'
@@ -44,7 +63,6 @@ export default function DirectionsPanel({
                                 <DirectionsList
                                     route={route}
                                     selectedDirection={selectedDirection}
-                                    onHighlightDirection={onHighlightDirection}
                                     onClearHighlight={onClearHighlight}
                                     onSelectDirection={onSelectDirection}
                                 />

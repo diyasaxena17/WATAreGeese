@@ -4,7 +4,6 @@ import DirectionsListItem from './DirectionsListItem';
 export type DirectionsListProps = {
     route: Route;
     selectedDirection: number | null;
-    onHighlightDirection: (order: number) => void;
     onClearHighlight: () => void;
     onSelectDirection: (order: number) => void;
 };
@@ -12,7 +11,6 @@ export type DirectionsListProps = {
 export default function DirectionsList({
     route,
     selectedDirection,
-    onHighlightDirection,
     onClearHighlight,
     onSelectDirection
 }: DirectionsListProps) {
@@ -24,9 +22,7 @@ export default function DirectionsList({
                     graphLocation={graphLocation}
                     order={idx + 1}
                     isSelected={selectedDirection == idx + 1}
-                    onHighlight={onHighlightDirection}
-                    onClearHighlight={onClearHighlight}
-                    onSelect={onSelectDirection}
+                    onSelect={selectedDirection == idx + 1 ? onClearHighlight : onSelectDirection}
                 />
             ))}
         </div>

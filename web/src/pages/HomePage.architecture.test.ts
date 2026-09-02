@@ -26,6 +26,32 @@ describe('HomePage routing boundary', () => {
 		expect(source).not.toContain("from '../map/updateLocation'");
 	});
 
+	it('does not import renderer implementations directly', () => {
+		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
+
+		expect(source).not.toContain('maplibre-gl');
+		expect(source).not.toContain('../map-rendering/maplibre');
+		expect(source).not.toContain('../map-rendering/leaflet');
+	});
+
+	it('keeps MapLibre as the active renderer and exposes Leaflet as fallback through the boundary', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
+
+		expect(source).toContain("export { useMapLibreMapRenderer as useMapRenderer } from './maplibre/MapLibreMapRenderer'");
+		expect(source).toContain("export { useLeafletMapRenderer } from './leaflet/LeafletMapRenderer'");
+		expect(source).toContain("export { useMapLibreMapRenderer } from './maplibre/MapLibreMapRenderer'");
+	});
+
+	it('does not introduce Google, Mapbox, or paid-token map dependencies', () => {
+		const packageJson = readFileSync(resolve(__dirname, '../../package.json'), 'utf8');
+		const rendererSource = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
+
+		expect(packageJson).toContain('"maplibre-gl"');
+		expect(packageJson).not.toContain('google-map');
+		expect(packageJson).not.toContain('mapbox-gl');
+		expect(rendererSource).not.toContain('accessToken');
+	});
+
 	it('uses the location hook instead of navigator geolocation directly', () => {
 		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
 

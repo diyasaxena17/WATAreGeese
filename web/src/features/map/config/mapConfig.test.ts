@@ -10,4 +10,26 @@ describe('mapConfig', () => {
 		expect(mapConfig.defaultZoom).toBe(16);
 		expect(mapConfig.userLocationZoom).toBe(17);
 	});
+
+	it('centralizes calm MapLibre camera defaults for Phase 1', () => {
+		expect(mapConfig.maplibre.camera.defaultPitch).toBeGreaterThanOrEqual(45);
+		expect(mapConfig.maplibre.camera.defaultPitch).toBeLessThanOrEqual(50);
+		expect(mapConfig.maplibre.camera.defaultBearing).toBe(-20);
+		expect(mapConfig.maplibre.camera.maxPitch).toBeGreaterThanOrEqual(60);
+		expect(mapConfig.maplibre.camera.maxPitch).toBeLessThanOrEqual(65);
+		expect(mapConfig.maplibre.camera.defaultZoom).toBeGreaterThan(mapConfig.defaultZoom);
+	});
+
+	it('keeps future MapLibre route and building camera values explicit', () => {
+		expect(mapConfig.maplibre.camera.routeZoom).toBeGreaterThan(mapConfig.maplibre.camera.defaultZoom);
+		expect(mapConfig.maplibre.camera.selectedBuildingZoom).toBeGreaterThan(mapConfig.maplibre.camera.routeZoom);
+		expect(mapConfig.maplibre.camera.routeBoundsPadding).toBeGreaterThan(0);
+		expect(mapConfig.maplibre.camera.animationDurationMs).toBeGreaterThan(0);
+	});
+
+	it('uses restrained placeholder building extrusion values without metadata', () => {
+		expect(mapConfig.maplibre.buildings.extrusionBaseHeight).toBe(0);
+		expect(mapConfig.maplibre.buildings.defaultExtrusionHeight).toBeGreaterThan(0);
+		expect(mapConfig.maplibre.buildings.defaultExtrusionHeight).toBeLessThanOrEqual(20);
+	});
 });

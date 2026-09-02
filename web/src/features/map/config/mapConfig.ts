@@ -8,5 +8,22 @@ export const mapConfig = {
 		[43.6, -80.3]
 	] as [[number, number], [number, number]],
 	tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	maplibre: {
+		camera: {
+			defaultPitch: 48,
+			defaultBearing: -20,
+			maxPitch: 62,
+			defaultZoom: 16.2,
+			routeZoom: 16.8,
+			selectedBuildingZoom: 18,
+			userLocationZoom: 17.2,
+			animationDurationMs: 800,
+			routeBoundsPadding: 96
+		},
+		buildings: {
+			extrusionBaseHeight: 0,
+			defaultExtrusionHeight: 18
+		}
+	}
 };
