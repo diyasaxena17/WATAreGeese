@@ -6,6 +6,7 @@ import { GraphLocation, Route } from '../../routing/types';
 
 export const CAMPUS_BUILDING_SOURCE_ID = 'campus-building-outlines';
 export const CAMPUS_BUILDING_LABEL_SOURCE_ID = 'campus-building-labels';
+export const LOCATION_LABEL_SOURCE_ID = 'selected-location-labels';
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
 
@@ -42,7 +43,12 @@ export const campusBuildingLabelLayer: LayerSpecification = {
 	id: 'campus-building-labels',
 	type: 'symbol',
 	source: CAMPUS_BUILDING_LABEL_SOURCE_ID,
-	minzoom: 15.2,
+	minzoom: 15,
+	filter: [
+		'any',
+		['>=', ['zoom'], 16.8],
+		['>=', ['length', ['get', 'floors', ['get', 'building']]], 5]
+	],
 	layout: {
 		'text-field': ['get', 'buildingCode', ['get', 'building']],
 		'text-size': [
@@ -50,31 +56,71 @@ export const campusBuildingLabelLayer: LayerSpecification = {
 			['linear'],
 			['zoom'],
 			15,
-			10,
+			9,
+			16.8,
+			11,
 			18,
-			14
+			13.5
 		],
 		'text-font': ['Open Sans Semibold'],
-		'text-anchor': 'center',
+		'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
+		'text-radial-offset': 0.25,
 		'text-allow-overlap': false,
 		'text-ignore-placement': false,
-		'text-padding': 4,
-		'text-offset': [0, 0]
+		'text-padding': 8,
+		'text-optional': true,
+		'symbol-sort-key': ['-', 12, ['length', ['get', 'floors', ['get', 'building']]]]
 	},
 	paint: {
-		'text-color': '#29332f',
+		'text-color': '#26332f',
 		'text-halo-color': '#f7f3ea',
-		'text-halo-width': 1.2,
-		'text-halo-blur': 0.4,
+		'text-halo-width': 1.4,
+		'text-halo-blur': 0.35,
 		'text-opacity': [
 			'interpolate',
 			['linear'],
 			['zoom'],
 			15,
-			0.65,
+			0.48,
+			16.8,
+			0.72,
 			17,
-			0.92
+			0.82,
+			18,
+			0.9
 		]
+	}
+};
+
+export const selectedLocationLabelLayer: LayerSpecification = {
+	id: 'selected-location-labels',
+	type: 'symbol',
+	source: LOCATION_LABEL_SOURCE_ID,
+	minzoom: 15,
+	layout: {
+		'text-field': ['get', 'label'],
+		'text-size': [
+			'interpolate',
+			['linear'],
+			['zoom'],
+			15,
+			10,
+			18,
+			13
+		],
+		'text-font': ['Open Sans Semibold'],
+		'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+		'text-radial-offset': 1,
+		'text-allow-overlap': false,
+		'text-ignore-placement': false,
+		'text-padding': 10
+	},
+	paint: {
+		'text-color': '#17211e',
+		'text-halo-color': '#ffffff',
+		'text-halo-width': 1.8,
+		'text-halo-blur': 0.25,
+		'text-opacity': 0.94
 	}
 };
 

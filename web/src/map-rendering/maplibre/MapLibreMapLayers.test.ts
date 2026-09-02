@@ -6,6 +6,7 @@ import { mapConfig } from '../../features/map/config/mapConfig';
 import {
 	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
+	LOCATION_LABEL_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	ROUTE_SOURCE_ID,
 	campusBuildingExtrusionLayer,
@@ -16,7 +17,8 @@ import {
 	campusPathPointOpacity,
 	campusPathLayers,
 	routeLayers,
-	routeToGeoJson
+	routeToGeoJson,
+	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 
 describe('MapLibre campus building layers', () => {
@@ -59,6 +61,44 @@ describe('MapLibre campus building layers', () => {
 			source: CAMPUS_BUILDING_LABEL_SOURCE_ID
 		});
 		expect(campusBuildingLabelLayer.layout?.['text-field']).toEqual(['get', 'buildingCode', ['get', 'building']]);
+	});
+
+	it('uses collision-aware zoom hierarchy for campus labels', () => {
+		expect(campusBuildingLabelLayer.minzoom).toBe(15);
+		expect(campusBuildingLabelLayer.filter).toEqual([
+			'any',
+			['>=', ['zoom'], 16.8],
+			['>=', ['length', ['get', 'floors', ['get', 'building']]], 5]
+		]);
+		expect(campusBuildingLabelLayer.layout).toMatchObject({
+			'text-allow-overlap': false,
+			'text-ignore-placement': false,
+			'text-optional': true,
+			'text-padding': 8
+		});
+		expect(campusBuildingLabelLayer.layout?.['text-variable-anchor']).toContain('center');
+		expect(campusBuildingLabelLayer.layout?.['symbol-sort-key']).toEqual([
+			'-',
+			12,
+			['length', ['get', 'floors', ['get', 'building']]]
+		]);
+	});
+
+	it('keeps selected location labels collision-aware and separate from route data', () => {
+		expect(selectedLocationLabelLayer).toMatchObject({
+			id: 'selected-location-labels',
+			type: 'symbol',
+			source: LOCATION_LABEL_SOURCE_ID,
+			layout: {
+				'text-field': ['get', 'label'],
+				'text-allow-overlap': false,
+				'text-ignore-placement': false
+			},
+			paint: {
+				'text-opacity': 0.94
+			}
+		});
+		expect(selectedLocationLabelLayer.source).not.toBe(ROUTE_SOURCE_ID);
 	});
 });
 

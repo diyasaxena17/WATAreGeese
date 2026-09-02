@@ -12,6 +12,7 @@ import {
 	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
+	LOCATION_LABEL_SOURCE_ID,
 	ROUTE_SOURCE_ID,
 	campusBuildingExtrusionLayer,
 	campusBuildingLabelLayer,
@@ -22,7 +23,8 @@ import {
 	campusPathPointOpacity,
 	campusPathSource,
 	routeLayers,
-	routeToGeoJson
+	routeToGeoJson,
+	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 import { createSoftCampusMapStyle } from './mapStyle';
 
@@ -83,7 +85,12 @@ export function useMapLibreMapRenderer(
 				data: routeToGeoJson(null, null)
 			});
 			routeLayers.forEach(layer => map.addLayer(layer));
+			map.addSource(LOCATION_LABEL_SOURCE_ID, {
+				type: 'geojson',
+				data: locationLabelsToGeoJson(null, null)
+			});
 			map.addLayer(campusBuildingLabelLayer);
+			map.addLayer(selectedLocationLabelLayer);
 			setIsReady(true);
 		});
 
@@ -107,6 +114,7 @@ export function useMapLibreMapRenderer(
 	useEffect(() => {
 		updatePointSource(mapRef.current, 'start-location', startMarkerLocation?.coordinate.toArray() ?? null, '#ffffff', '#2563eb');
 		updatePointSource(mapRef.current, 'end-location', endMarkerLocation?.coordinate.toArray() ?? null, '#2563eb', '#2563eb');
+		updateLocationLabelSource(mapRef.current, startMarkerLocation, endMarkerLocation);
 	}, [startMarkerLocation, endMarkerLocation]);
 
 	useEffect(() => {
@@ -173,6 +181,13 @@ function updateRouteSource(map: Map | null, route: Route | null, highlightedDire
 	(source as GeoJSONSource).setData(routeToGeoJson(route, highlightedDirection));
 }
 
+function updateLocationLabelSource(map: Map | null, start: Location | null, end: Location | null) {
+	const source = map?.getSource(LOCATION_LABEL_SOURCE_ID);
+	if(!source) return;
+
+	(source as GeoJSONSource).setData(locationLabelsToGeoJson(start, end));
+}
+
 function setPaintProperty(map: Map | null, layerId: string, property: string, value: unknown) {
 	if(!map?.getLayer(layerId)) return;
 
@@ -218,4 +233,29 @@ function updatePointSource(
 			'circle-stroke-width': 2
 		}
 	});
+}
+
+function locationLabelsToGeoJson(start: Location | null, end: Location | null) {
+	return {
+		type: 'FeatureCollection' as const,
+		features: [
+			locationLabelFeature(start),
+			locationLabelFeature(end)
+		].filter(feature => feature != null)
+	};
+}
+
+function locationLabelFeature(location: Location | null) {
+	if(!location) return null;
+
+	return {
+		type: 'Feature' as const,
+		properties: {
+			label: location.buildingFloor.buildingCode
+		},
+		geometry: {
+			type: 'Point' as const,
+			coordinates: location.coordinate.toArray()
+		}
+	};
 }
