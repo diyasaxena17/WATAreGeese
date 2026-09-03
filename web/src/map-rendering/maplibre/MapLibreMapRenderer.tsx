@@ -8,6 +8,7 @@ import { getBuildingOutlines, getCampusBuildingsGeoJson, getCampusPathsGeoJson }
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { UserPosition } from '../../features/location';
 import { Location, Route } from '../../routing/types';
+import { isRecoverableRendererError } from '../rendererRecovery';
 import { MapLocationSyncRequest, MapRenderer } from '../types';
 import {
 	CAMPUS_BUILDING_SOURCE_ID,
@@ -38,15 +39,17 @@ type MapLibreMapRendererHostProps = {
 	highlightedDirection: number | null;
 	userPosition: UserPosition | null;
 	onRendererChange: (renderer: MapRenderer | null) => void;
+	onRecoverableError?: (error: unknown) => void;
 };
 
 export function MapLibreMapRendererHost({
 	hasRoute,
 	highlightedDirection,
 	userPosition,
-	onRendererChange
+	onRendererChange,
+	onRecoverableError
 }: MapLibreMapRendererHostProps) {
-	const renderer = useMapLibreMapRenderer(hasRoute, highlightedDirection, userPosition);
+	const renderer = useMapLibreMapRenderer(hasRoute, highlightedDirection, userPosition, onRecoverableError);
 
 	useEffect(() => {
 		onRendererChange(renderer);
@@ -71,7 +74,8 @@ function resolveLocation(request: MapLocationSyncRequest): Location | null {
 export function useMapLibreMapRenderer(
 	hasRoute = false,
 	highlightedDirection: number | null = null,
-	userPosition: UserPosition | null = null
+	userPosition: UserPosition | null = null,
+	onRecoverableError?: (error: unknown) => void
 ): MapRenderer {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const mapRef = useRef<Map | null>(null);
@@ -83,53 +87,75 @@ export function useMapLibreMapRenderer(
 	useEffect(() => {
 		if(!containerRef.current || mapRef.current) return;
 
-		const map = new Map({
-			container: containerRef.current,
-			style: createSoftCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
-			center: [mapConfig.center[1], mapConfig.center[0]],
-			zoom: mapConfig.maplibre.camera.defaultZoom,
-			pitch: mapConfig.maplibre.camera.defaultPitch,
-			bearing: mapConfig.maplibre.camera.defaultBearing,
-			maxPitch: mapConfig.maplibre.camera.maxPitch,
-			minZoom: mapConfig.minZoom,
-			maxBounds: [
-				[mapConfig.maxBounds[0][1], mapConfig.maxBounds[0][0]],
-				[mapConfig.maxBounds[1][1], mapConfig.maxBounds[1][0]]
-			]
-		});
+		let map: Map;
+		try {
+			map = new Map({
+				container: containerRef.current,
+				style: createSoftCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
+				center: [mapConfig.center[1], mapConfig.center[0]],
+				zoom: mapConfig.maplibre.camera.defaultZoom,
+				pitch: mapConfig.maplibre.camera.defaultPitch,
+				bearing: mapConfig.maplibre.camera.defaultBearing,
+				maxPitch: mapConfig.maplibre.camera.maxPitch,
+				minZoom: mapConfig.minZoom,
+				maxBounds: [
+					[mapConfig.maxBounds[0][1], mapConfig.maxBounds[0][0]],
+					[mapConfig.maxBounds[1][1], mapConfig.maxBounds[1][0]]
+				]
+			});
+		} catch (error) {
+			if(isRecoverableRendererError(error)) {
+				onRecoverableError?.(error);
+				return;
+			}
+			throw error;
+		}
 
 		mapRef.current = map;
 
+		map.on('error', event => {
+			const error = event.error;
+			if(isRecoverableRendererError(error)) onRecoverableError?.(error);
+		});
+
 		map.on('load', () => {
-			map.addSource(CAMPUS_BUILDING_SOURCE_ID, campusBuildingSource(getBuildingOutlines()));
-			map.addLayer(campusBuildingExtrusionLayer);
-			map.addSource(SELECTED_BUILDING_SOURCE_ID, {
-				type: 'geojson',
-				data: selectedBuildingToGeoJson(null)
-			});
-			selectedBuildingLayers.forEach(layer => map.addLayer(layer));
-			map.addSource(CAMPUS_BUILDING_LABEL_SOURCE_ID, campusBuildingLabelSource(getCampusBuildingsGeoJson()));
+			try {
+				map.addSource(CAMPUS_BUILDING_SOURCE_ID, campusBuildingSource(getBuildingOutlines()));
+				map.addLayer(campusBuildingExtrusionLayer);
+				map.addSource(SELECTED_BUILDING_SOURCE_ID, {
+					type: 'geojson',
+					data: selectedBuildingToGeoJson(null)
+				});
+				selectedBuildingLayers.forEach(layer => map.addLayer(layer));
+				map.addSource(CAMPUS_BUILDING_LABEL_SOURCE_ID, campusBuildingLabelSource(getCampusBuildingsGeoJson()));
 
-			map.addSource(CAMPUS_PATH_SOURCE_ID, campusPathSource(getCampusPathsGeoJson()));
-			campusPathLayers.forEach(layer => map.addLayer(layer));
+				map.addSource(CAMPUS_PATH_SOURCE_ID, campusPathSource(getCampusPathsGeoJson()));
+				campusPathLayers.forEach(layer => map.addLayer(layer));
 
-			map.addSource(ROUTE_SOURCE_ID, {
-				type: 'geojson',
-				data: routeToGeoJson(null, null)
-			});
-			routeLayers.forEach(layer => map.addLayer(layer));
-			map.addSource(LOCATION_LABEL_SOURCE_ID, {
-				type: 'geojson',
-				data: locationLabelsToGeoJson(null, null)
-			});
-			map.addSource(LOCATION_MARKER_SOURCE_ID, {
-				type: 'geojson',
-				data: locationMarkersToGeoJson(null, null, null)
-			});
-			locationMarkerLayers.forEach(layer => map.addLayer(layer));
-			map.addLayer(campusBuildingLabelLayer);
-			map.addLayer(selectedLocationLabelLayer);
-			setIsReady(true);
+				map.addSource(ROUTE_SOURCE_ID, {
+					type: 'geojson',
+					data: routeToGeoJson(null, null)
+				});
+				routeLayers.forEach(layer => map.addLayer(layer));
+				map.addSource(LOCATION_LABEL_SOURCE_ID, {
+					type: 'geojson',
+					data: locationLabelsToGeoJson(null, null)
+				});
+				map.addSource(LOCATION_MARKER_SOURCE_ID, {
+					type: 'geojson',
+					data: locationMarkersToGeoJson(null, null, null)
+				});
+				locationMarkerLayers.forEach(layer => map.addLayer(layer));
+				map.addLayer(campusBuildingLabelLayer);
+				map.addLayer(selectedLocationLabelLayer);
+				setIsReady(true);
+			} catch (error) {
+				if(isRecoverableRendererError(error)) {
+					onRecoverableError?.(error);
+					return;
+				}
+				throw error;
+			}
 		});
 
 		return () => {
@@ -137,7 +163,7 @@ export function useMapLibreMapRenderer(
 			mapRef.current = null;
 			setIsReady(false);
 		};
-	}, []);
+	}, [onRecoverableError]);
 
 	useEffect(() => {
 		updateRouteSource(mapRef.current, displayedRoute, highlightedDirection);

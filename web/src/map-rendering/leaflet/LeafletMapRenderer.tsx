@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import 'leaflet/dist/leaflet.css';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 
 import { mapConfig } from '../../features/map/config/mapConfig';
@@ -15,6 +16,29 @@ import {
 import LeafletZoomControl from './LeafletZoomControl';
 import UserLocationMarker from './UserLocationMarker';
 import UserLocationViewport from './UserLocationViewport';
+
+type LeafletMapRendererHostProps = {
+	hasRoute: boolean;
+	highlightedDirection: number | null;
+	userPosition: UserPosition | null;
+	onRendererChange: (renderer: MapRenderer | null) => void;
+};
+
+export function LeafletMapRendererHost({
+	hasRoute,
+	highlightedDirection,
+	userPosition,
+	onRendererChange
+}: LeafletMapRendererHostProps) {
+	const renderer = useLeafletMapRenderer(hasRoute, highlightedDirection, userPosition);
+
+	useEffect(() => {
+		onRendererChange(renderer);
+		return () => onRendererChange(null);
+	}, [onRendererChange, renderer]);
+
+	return renderer.mapElement;
+}
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {

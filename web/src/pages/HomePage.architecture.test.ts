@@ -58,6 +58,20 @@ describe('HomePage routing boundary', () => {
 		expect(source).not.toContain('maplibre-gl');
 	});
 
+	it('recovers to Leaflet through the renderer boundary without duplicating navigation state', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/LazyMapRenderer.tsx'), 'utf8');
+
+		expect(source).toContain("import('./leaflet/LeafletMapRenderer')");
+		expect(source).toContain('fallbackReason ?');
+		expect(source).toContain('<RendererFallbackNotice />');
+		expect(source).toContain('onRecoverableError={recoverToFallback}');
+		expect(source).toContain('hasRoute={hasRoute}');
+		expect(source).toContain('highlightedDirection={highlightedDirection}');
+		expect(source).toContain('userPosition={userPosition}');
+		expect(source).not.toContain('NavigationService');
+		expect(source).not.toContain('calculateRoute');
+	});
+
 	it('does not introduce Google, Mapbox, or paid-token map dependencies', () => {
 		const packageJson = readFileSync(resolve(__dirname, '../../package.json'), 'utf8');
 		const rendererSource = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
