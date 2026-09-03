@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { EaseToOptions, FitBoundsOptions, GeoJSONSource, LngLatBounds, Map } from 'maplibre-gl';
@@ -31,6 +32,29 @@ import {
 	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 import { createSoftCampusMapStyle } from './mapStyle';
+
+type MapLibreMapRendererHostProps = {
+	hasRoute: boolean;
+	highlightedDirection: number | null;
+	userPosition: UserPosition | null;
+	onRendererChange: (renderer: MapRenderer | null) => void;
+};
+
+export function MapLibreMapRendererHost({
+	hasRoute,
+	highlightedDirection,
+	userPosition,
+	onRendererChange
+}: MapLibreMapRendererHostProps) {
+	const renderer = useMapLibreMapRenderer(hasRoute, highlightedDirection, userPosition);
+
+	useEffect(() => {
+		onRendererChange(renderer);
+		return () => onRendererChange(null);
+	}, [onRendererChange, renderer]);
+
+	return renderer.mapElement;
+}
 
 function resolveLocation(request: MapLocationSyncRequest): Location | null {
 	if(request.route) {

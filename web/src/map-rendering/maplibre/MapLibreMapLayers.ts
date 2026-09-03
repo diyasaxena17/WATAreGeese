@@ -1,4 +1,4 @@
-import { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl';
+import type { GeoJSONSourceSpecification, LayerSpecification } from 'maplibre-gl';
 
 import { CAMPUS_FEATURE_TYPES, CampusFeatureType, BuildingOutlineFeature, BuildingsGeoJson, PathsGeoJson } from '../../campus-data/schema';
 import { mapConfig } from '../../features/map/config/mapConfig';

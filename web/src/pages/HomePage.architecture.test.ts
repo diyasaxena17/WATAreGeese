@@ -45,9 +45,17 @@ describe('HomePage routing boundary', () => {
 	it('keeps MapLibre as the active renderer and exposes Leaflet as fallback through the boundary', () => {
 		const source = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
 
-		expect(source).toContain("export { useMapLibreMapRenderer as useMapRenderer } from './maplibre/MapLibreMapRenderer'");
+		expect(source).toContain("export { useLazyMapRenderer as useMapRenderer } from './LazyMapRenderer'");
 		expect(source).toContain("export { useLeafletMapRenderer } from './leaflet/LeafletMapRenderer'");
-		expect(source).toContain("export { useMapLibreMapRenderer } from './maplibre/MapLibreMapRenderer'");
+		expect(source).not.toContain("from './maplibre/MapLibreMapRenderer'");
+	});
+
+	it('lazy loads MapLibre behind the renderer boundary', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/LazyMapRenderer.tsx'), 'utf8');
+
+		expect(source).toContain("import('./maplibre/MapLibreMapRenderer')");
+		expect(source).toContain('<Suspense fallback={<MapRendererLoadingState />}>');
+		expect(source).not.toContain('maplibre-gl');
 	});
 
 	it('does not introduce Google, Mapbox, or paid-token map dependencies', () => {

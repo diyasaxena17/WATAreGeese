@@ -1,4 +1,4 @@
-import { StyleSpecification } from 'maplibre-gl';
+import type { StyleSpecification } from 'maplibre-gl';
 
 export const BASEMAP_SOURCE_ID = 'basemap';
 export const BASEMAP_LAYER_ID = 'basemap-muted-raster';
