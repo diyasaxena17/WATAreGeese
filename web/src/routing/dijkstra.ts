@@ -45,7 +45,7 @@ export class Dijkstra {
         ]
     ]);
 
-    private readonly _dis: Map<String, number>;
+    private readonly _dis: Map<string, number>;
     readonly adjList: AdjacencyList;
 
     constructor(adjList: AdjacencyList) {
