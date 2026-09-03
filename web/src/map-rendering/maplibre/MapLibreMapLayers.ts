@@ -7,6 +7,8 @@ import { GraphLocation, Route } from '../../routing/types';
 export const CAMPUS_BUILDING_SOURCE_ID = 'campus-building-outlines';
 export const CAMPUS_BUILDING_LABEL_SOURCE_ID = 'campus-building-labels';
 export const LOCATION_LABEL_SOURCE_ID = 'selected-location-labels';
+export const LOCATION_MARKER_SOURCE_ID = 'selected-location-markers';
+export const SELECTED_BUILDING_SOURCE_ID = 'selected-building-outline';
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
 
@@ -31,6 +33,40 @@ export const campusBuildingExtrusionLayer: LayerSpecification = {
 		'fill-extrusion-opacity': 0.62
 	}
 };
+
+export const selectedBuildingLayers: LayerSpecification[] = [
+	{
+		id: 'selected-building-fill',
+		type: 'fill',
+		source: SELECTED_BUILDING_SOURCE_ID,
+		paint: {
+			'fill-color': '#f2a23a',
+			'fill-opacity': 0.16
+		}
+	},
+	{
+		id: 'selected-building-outline',
+		type: 'line',
+		source: SELECTED_BUILDING_SOURCE_ID,
+		layout: {
+			'line-cap': 'round',
+			'line-join': 'round'
+		},
+		paint: {
+			'line-color': '#8b5a16',
+			'line-opacity': 0.82,
+			'line-width': [
+				'interpolate',
+				['linear'],
+				['zoom'],
+				15,
+				1.4,
+				18,
+				2.6
+			]
+		}
+	}
+];
 
 export function campusBuildingLabelSource(buildings: BuildingsGeoJson): GeoJSONSourceSpecification {
 	return {
@@ -123,6 +159,131 @@ export const selectedLocationLabelLayer: LayerSpecification = {
 		'text-opacity': 0.94
 	}
 };
+
+export const locationMarkerLayers: LayerSpecification[] = [
+	{
+		id: 'location-marker-accuracy',
+		type: 'circle',
+		source: LOCATION_MARKER_SOURCE_ID,
+		filter: [
+			'all',
+			['==', ['get', 'kind'], 'user'],
+			['has', 'accuracyMeters']
+		],
+		paint: {
+			'circle-color': '#2563eb',
+			'circle-opacity': 0.12,
+			'circle-radius': [
+				'interpolate',
+				['linear'],
+				['get', 'accuracyMeters'],
+				0,
+				12,
+				60,
+				28
+			],
+			'circle-stroke-color': '#ffffff',
+			'circle-stroke-opacity': 0.55,
+			'circle-stroke-width': 1
+		}
+	},
+	{
+		id: 'location-marker-halo',
+		type: 'circle',
+		source: LOCATION_MARKER_SOURCE_ID,
+		paint: {
+			'circle-color': '#ffffff',
+			'circle-radius': [
+				'match',
+				['get', 'kind'],
+				'start',
+				10,
+				'end',
+				11,
+				8
+			],
+			'circle-opacity': [
+				'match',
+				['get', 'kind'],
+				'user',
+				0.86,
+				0.96
+			],
+			'circle-stroke-color': [
+				'match',
+				['get', 'kind'],
+				'start',
+				'#2563eb',
+				'end',
+				'#111827',
+				'#2563eb'
+			],
+			'circle-stroke-width': [
+				'match',
+				['get', 'kind'],
+				'user',
+				2,
+				2.5
+			]
+		}
+	},
+	{
+		id: 'location-marker-core',
+		type: 'circle',
+		source: LOCATION_MARKER_SOURCE_ID,
+		paint: {
+			'circle-color': [
+				'match',
+				['get', 'kind'],
+				'start',
+				'#ffffff',
+				'end',
+				'#111827',
+				'#2563eb'
+			],
+			'circle-radius': [
+				'match',
+				['get', 'kind'],
+				'start',
+				5,
+				'end',
+				5.5,
+				4.5
+			],
+			'circle-opacity': 0.98
+		}
+	},
+	{
+		id: 'location-marker-glyphs',
+		type: 'symbol',
+		source: LOCATION_MARKER_SOURCE_ID,
+		filter: ['!=', ['get', 'kind'], 'user'],
+		layout: {
+			'text-field': ['get', 'glyph'],
+			'text-font': ['Open Sans Semibold'],
+			'text-size': 10,
+			'text-allow-overlap': true,
+			'text-ignore-placement': true
+		},
+		paint: {
+			'text-color': [
+				'match',
+				['get', 'kind'],
+				'start',
+				'#1d4ed8',
+				'#ffffff'
+			],
+			'text-halo-color': [
+				'match',
+				['get', 'kind'],
+				'start',
+				'#ffffff',
+				'#111827'
+			],
+			'text-halo-width': 0.4
+		}
+	}
+];
 
 export function campusPathSource(paths: PathsGeoJson): GeoJSONSourceSpecification {
 	return {

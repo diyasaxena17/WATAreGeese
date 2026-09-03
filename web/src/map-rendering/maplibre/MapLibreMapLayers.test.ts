@@ -7,17 +7,21 @@ import {
 	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
 	LOCATION_LABEL_SOURCE_ID,
+	LOCATION_MARKER_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	ROUTE_SOURCE_ID,
+	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
 	campusBuildingSource,
+	locationMarkerLayers,
 	campusPathLineOpacity,
 	campusPathPointOpacity,
 	campusPathLayers,
 	routeLayers,
 	routeToGeoJson,
+	selectedBuildingLayers,
 	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 
@@ -99,6 +103,37 @@ describe('MapLibre campus building layers', () => {
 			}
 		});
 		expect(selectedLocationLabelLayer.source).not.toBe(ROUTE_SOURCE_ID);
+	});
+
+	it('uses restrained selected-building fill and outline layers', () => {
+		expect(selectedBuildingLayers.map(layer => layer.id)).toEqual([
+			'selected-building-fill',
+			'selected-building-outline'
+		]);
+		expect(selectedBuildingLayers.every(layer => layer.source == SELECTED_BUILDING_SOURCE_ID)).toBe(true);
+		expect(selectedBuildingLayers[0].paint?.['fill-opacity']).toBeLessThan(0.2);
+		expect(selectedBuildingLayers[1].type).toBe('line');
+	});
+});
+
+describe('MapLibre location marker layers', () => {
+	it('orders marker layers by accuracy, halo, core, and endpoint glyphs', () => {
+		expect(locationMarkerLayers.map(layer => layer.id)).toEqual([
+			'location-marker-accuracy',
+			'location-marker-halo',
+			'location-marker-core',
+			'location-marker-glyphs'
+		]);
+		expect(locationMarkerLayers.every(layer => layer.source == LOCATION_MARKER_SOURCE_ID)).toBe(true);
+	});
+
+	it('distinguishes endpoints with glyphs instead of tiny color differences alone', () => {
+		const glyphLayer = locationMarkerLayers.find(layer => layer.id == 'location-marker-glyphs');
+
+		expect(glyphLayer?.type).toBe('symbol');
+		expect(glyphLayer?.filter).toEqual(['!=', ['get', 'kind'], 'user']);
+		expect(glyphLayer?.layout?.['text-field']).toEqual(['get', 'glyph']);
+		expect(glyphLayer?.layout?.['text-allow-overlap']).toBe(true);
 	});
 });
 

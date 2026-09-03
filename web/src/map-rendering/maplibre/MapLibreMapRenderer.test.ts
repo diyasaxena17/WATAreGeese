@@ -5,8 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { BuildingFloor, Coordinate, Location } from '../../routing/types';
 import {
+	locationMarkersToGeoJson,
 	motionDuration,
 	routeBoundsCameraOptions,
+	selectedBuildingToGeoJson,
 	selectedBuildingCameraOptions,
 	userLocationCameraOptions
 } from './MapLibreMapRenderer';
@@ -44,9 +46,11 @@ describe('MapLibre camera intents', () => {
 
 	it('recenters user location smoothly without changing heading', () => {
 		expect(userLocationCameraOptions({
-			latitude: 43.4723,
-			longitude: -80.5449,
-			accuracy: 12
+			coordinates: {
+				latitude: 43.4723,
+				longitude: -80.5449
+			},
+			accuracyMeters: 12
 		})).toEqual({
 			center: [-80.5449, 43.4723],
 			zoom: mapConfig.maplibre.camera.userLocationZoom,
@@ -78,5 +82,44 @@ describe('MapLibre camera intents', () => {
 		expect(routeSourceEffect).toContain('[displayedRoute, highlightedDirection]');
 		expect(routeSourceEffect).not.toContain('fitRouteBounds');
 		expect(routeSourceEffect).not.toContain('easeTo');
+	});
+
+	it('maps start, destination, and user position into distinguishable marker features', () => {
+		const start = new Location(
+			new Coordinate([-80.543, 43.4718]),
+			new BuildingFloor({ buildingCode: 'DC', floor: '1' })
+		);
+		const end = new Location(
+			new Coordinate([-80.541, 43.472]),
+			new BuildingFloor({ buildingCode: 'MC', floor: '3' })
+		);
+
+		const geoJson = locationMarkersToGeoJson(start, end, {
+			coordinates: {
+				latitude: 43.4723,
+				longitude: -80.5449
+			},
+			accuracyMeters: 24
+		});
+
+		expect(geoJson.features.map(feature => feature.properties)).toEqual([
+			{ kind: 'start', glyph: 'S' },
+			{ kind: 'end', glyph: 'D' },
+			{ kind: 'user', glyph: '', accuracyMeters: 24 }
+		]);
+	});
+
+	it('uses existing building outlines for selected-building styling', () => {
+		const selected = new Location(
+			new Coordinate([-80.543, 43.4718]),
+			new BuildingFloor({ buildingCode: 'DC', floor: '1' })
+		);
+
+		const geoJson = selectedBuildingToGeoJson(selected);
+
+		expect(geoJson.features.length).toBeGreaterThan(0);
+		expect(geoJson.features.every(feature =>
+			feature.properties.default.buildingCode == 'DC'
+		)).toBe(true);
 	});
 });

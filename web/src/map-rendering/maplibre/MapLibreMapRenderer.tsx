@@ -13,17 +13,21 @@ import {
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	LOCATION_LABEL_SOURCE_ID,
+	LOCATION_MARKER_SOURCE_ID,
 	ROUTE_SOURCE_ID,
+	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
 	campusBuildingSource,
+	locationMarkerLayers,
 	campusPathLayers,
 	campusPathLineOpacity,
 	campusPathPointOpacity,
 	campusPathSource,
 	routeLayers,
 	routeToGeoJson,
+	selectedBuildingLayers,
 	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 import { createSoftCampusMapStyle } from './mapStyle';
@@ -75,6 +79,11 @@ export function useMapLibreMapRenderer(
 		map.on('load', () => {
 			map.addSource(CAMPUS_BUILDING_SOURCE_ID, campusBuildingSource(getBuildingOutlines()));
 			map.addLayer(campusBuildingExtrusionLayer);
+			map.addSource(SELECTED_BUILDING_SOURCE_ID, {
+				type: 'geojson',
+				data: selectedBuildingToGeoJson(null)
+			});
+			selectedBuildingLayers.forEach(layer => map.addLayer(layer));
 			map.addSource(CAMPUS_BUILDING_LABEL_SOURCE_ID, campusBuildingLabelSource(getCampusBuildingsGeoJson()));
 
 			map.addSource(CAMPUS_PATH_SOURCE_ID, campusPathSource(getCampusPathsGeoJson()));
@@ -89,6 +98,11 @@ export function useMapLibreMapRenderer(
 				type: 'geojson',
 				data: locationLabelsToGeoJson(null, null)
 			});
+			map.addSource(LOCATION_MARKER_SOURCE_ID, {
+				type: 'geojson',
+				data: locationMarkersToGeoJson(null, null, null)
+			});
+			locationMarkerLayers.forEach(layer => map.addLayer(layer));
 			map.addLayer(campusBuildingLabelLayer);
 			map.addLayer(selectedLocationLabelLayer);
 			setIsReady(true);
@@ -112,14 +126,9 @@ export function useMapLibreMapRenderer(
 	}, [hasRoute]);
 
 	useEffect(() => {
-		updatePointSource(mapRef.current, 'start-location', startMarkerLocation?.coordinate.toArray() ?? null, '#ffffff', '#2563eb');
-		updatePointSource(mapRef.current, 'end-location', endMarkerLocation?.coordinate.toArray() ?? null, '#2563eb', '#2563eb');
 		updateLocationLabelSource(mapRef.current, startMarkerLocation, endMarkerLocation);
-	}, [startMarkerLocation, endMarkerLocation]);
-
-	useEffect(() => {
-		updatePointSource(mapRef.current, 'user-location', userPosition ? [userPosition.longitude, userPosition.latitude] : null, '#2563eb', '#ffffff');
-	}, [userPosition]);
+		updateLocationMarkerSource(mapRef.current, startMarkerLocation, endMarkerLocation, userPosition);
+	}, [startMarkerLocation, endMarkerLocation, userPosition]);
 
 	return useMemo(() => ({
 		mapElement: <div ref={containerRef} className="h-full w-full" />,
@@ -151,6 +160,7 @@ export function useMapLibreMapRenderer(
 function flyToSelectedBuilding(map: Map | null, location: Location | null) {
 	if(!map || !location) return;
 
+	updateSelectedBuildingSource(map, location);
 	map.easeTo(selectedBuildingCameraOptions(location));
 }
 
@@ -188,7 +198,7 @@ export function routeBoundsCameraOptions(): FitBoundsOptions {
 
 export function userLocationCameraOptions(position: UserPosition): EaseToOptions {
 	return {
-		center: [position.longitude, position.latitude],
+		center: [position.coordinates.longitude, position.coordinates.latitude],
 		zoom: mapConfig.maplibre.camera.userLocationZoom,
 		pitch: mapConfig.maplibre.camera.defaultPitch,
 		duration: motionDuration()
@@ -215,51 +225,24 @@ function updateLocationLabelSource(map: Map | null, start: Location | null, end:
 	(source as GeoJSONSource).setData(locationLabelsToGeoJson(start, end));
 }
 
+function updateLocationMarkerSource(map: Map | null, start: Location | null, end: Location | null, userPosition: UserPosition | null) {
+	const source = map?.getSource(LOCATION_MARKER_SOURCE_ID);
+	if(!source) return;
+
+	(source as GeoJSONSource).setData(locationMarkersToGeoJson(start, end, userPosition));
+}
+
+function updateSelectedBuildingSource(map: Map | null, location: Location | null) {
+	const source = map?.getSource(SELECTED_BUILDING_SOURCE_ID);
+	if(!source) return;
+
+	(source as GeoJSONSource).setData(selectedBuildingToGeoJson(location));
+}
+
 function setPaintProperty(map: Map | null, layerId: string, property: string, value: unknown) {
 	if(!map?.getLayer(layerId)) return;
 
 	map.setPaintProperty(layerId, property, value);
-}
-
-function updatePointSource(
-	map: Map | null,
-	id: string,
-	coordinates: [number, number] | null,
-	fillColor: string,
-	strokeColor: string
-) {
-	if(!map || !map.isStyleLoaded()) return;
-
-	const data = {
-		type: 'FeatureCollection' as const,
-		features: coordinates ? [{
-			type: 'Feature' as const,
-			properties: {},
-			geometry: {
-				type: 'Point' as const,
-				coordinates
-			}
-		}] : []
-	};
-
-	const existingSource = map.getSource(id);
-	if(existingSource) {
-		(existingSource as GeoJSONSource).setData(data);
-		return;
-	}
-
-	map.addSource(id, { type: 'geojson', data });
-	map.addLayer({
-		id,
-		type: 'circle',
-		source: id,
-		paint: {
-			'circle-color': fillColor,
-			'circle-radius': 7,
-			'circle-stroke-color': strokeColor,
-			'circle-stroke-width': 2
-		}
-	});
 }
 
 function locationLabelsToGeoJson(start: Location | null, end: Location | null) {
@@ -284,5 +267,49 @@ function locationLabelFeature(location: Location | null) {
 			type: 'Point' as const,
 			coordinates: location.coordinate.toArray()
 		}
+	};
+}
+
+export function locationMarkersToGeoJson(start: Location | null, end: Location | null, userPosition: UserPosition | null) {
+	return {
+		type: 'FeatureCollection' as const,
+		features: [
+			locationMarkerFeature('start', start?.coordinate.toArray() ?? null, 'S'),
+			locationMarkerFeature('end', end?.coordinate.toArray() ?? null, 'D'),
+			locationMarkerFeature(
+				'user',
+				userPosition ? [userPosition.coordinates.longitude, userPosition.coordinates.latitude] : null,
+				'',
+				userPosition?.accuracyMeters
+			)
+		].filter(feature => feature != null)
+	};
+}
+
+function locationMarkerFeature(kind: 'start' | 'end' | 'user', coordinates: [number, number] | null, glyph: string, accuracyMeters?: number) {
+	if(!coordinates) return null;
+
+	return {
+		type: 'Feature' as const,
+		properties: {
+			kind,
+			glyph,
+			...(accuracyMeters != null ? { accuracyMeters } : {})
+		},
+		geometry: {
+			type: 'Point' as const,
+			coordinates
+		}
+	};
+}
+
+export function selectedBuildingToGeoJson(location: Location | null) {
+	const buildingCode = location?.buildingFloor.buildingCode;
+
+	return {
+		type: 'FeatureCollection' as const,
+		features: buildingCode ? getBuildingOutlines().filter(feature =>
+			feature.properties.default.buildingCode == buildingCode
+		) : []
 	};
 }
