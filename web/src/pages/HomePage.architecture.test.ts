@@ -26,6 +26,14 @@ describe('HomePage routing boundary', () => {
 		expect(source).not.toContain("from '../map/updateLocation'");
 	});
 
+	it('requests selected-building camera focus through the renderer boundary', () => {
+		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
+
+		expect(source).toContain('mapRenderer.focusLocation(locationForBuilding(building, nextFloor, startEndLocations))');
+		expect(source).not.toContain('easeTo');
+		expect(source).not.toContain('fitBounds');
+	});
+
 	it('does not import renderer implementations directly', () => {
 		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
 

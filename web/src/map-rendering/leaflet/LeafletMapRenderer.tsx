@@ -64,6 +64,7 @@ export function useLeafletMapRenderer(
 		canRenderDirections: true,
 		syncStartLocation: resolveLocation,
 		syncEndLocation: resolveLocation,
+		focusLocation: () => {},
 		setLocationMarkers: (start, end) => {
 			setStartMarkerLocation(start);
 			setEndMarkerLocation(end);

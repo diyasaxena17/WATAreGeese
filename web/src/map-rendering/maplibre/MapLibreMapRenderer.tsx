@@ -1,6 +1,6 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { GeoJSONSource, LngLatBounds, Map } from 'maplibre-gl';
+import { EaseToOptions, FitBoundsOptions, GeoJSONSource, LngLatBounds, Map } from 'maplibre-gl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getBuildingOutlines, getCampusBuildingsGeoJson, getCampusPathsGeoJson } from '../../campus-data/selectors';
@@ -127,6 +127,9 @@ export function useMapLibreMapRenderer(
 		canRenderDirections: true,
 		syncStartLocation: resolveLocation,
 		syncEndLocation: resolveLocation,
+		focusLocation: location => {
+			flyToSelectedBuilding(mapRef.current, location);
+		},
 		setLocationMarkers: (start, end) => {
 			setStartMarkerLocation(start);
 			setEndMarkerLocation(end);
@@ -140,15 +143,15 @@ export function useMapLibreMapRenderer(
 			const target = position ?? userPosition;
 			if(!target) return;
 
-			mapRef.current?.easeTo({
-				center: [target.longitude, target.latitude],
-				zoom: mapConfig.maplibre.camera.userLocationZoom,
-				pitch: mapConfig.maplibre.camera.defaultPitch,
-				bearing: mapConfig.maplibre.camera.defaultBearing,
-				duration: motionDuration()
-			});
+			mapRef.current?.easeTo(userLocationCameraOptions(target));
 		}
 	}), [isReady, userPosition]);
+}
+
+function flyToSelectedBuilding(map: Map | null, location: Location | null) {
+	if(!map || !location) return;
+
+	map.easeTo(selectedBuildingCameraOptions(location));
 }
 
 function fitRouteBounds(map: Map | null, route: Route | null) {
@@ -160,17 +163,41 @@ function fitRouteBounds(map: Map | null, route: Route | null) {
 		new LngLatBounds(coordinates[0], coordinates[0])
 	);
 
-	map.fitBounds(bounds, {
+	map.fitBounds(bounds, routeBoundsCameraOptions());
+}
+
+export function selectedBuildingCameraOptions(location: Location): EaseToOptions {
+	return {
+		center: location.coordinate.toArray(),
+		zoom: mapConfig.maplibre.camera.selectedBuildingZoom,
+		pitch: mapConfig.maplibre.camera.defaultPitch,
+		bearing: mapConfig.maplibre.camera.defaultBearing,
+		duration: motionDuration()
+	};
+}
+
+export function routeBoundsCameraOptions(): FitBoundsOptions {
+	return {
 		padding: mapConfig.maplibre.camera.routeBoundsPadding,
 		maxZoom: mapConfig.maplibre.camera.routeZoom,
 		pitch: mapConfig.maplibre.camera.defaultPitch,
 		bearing: mapConfig.maplibre.camera.defaultBearing,
 		duration: motionDuration()
-	});
+	};
 }
 
-function motionDuration() {
+export function userLocationCameraOptions(position: UserPosition): EaseToOptions {
+	return {
+		center: [position.longitude, position.latitude],
+		zoom: mapConfig.maplibre.camera.userLocationZoom,
+		pitch: mapConfig.maplibre.camera.defaultPitch,
+		duration: motionDuration()
+	};
+}
+
+export function motionDuration() {
 	if(typeof window == 'undefined') return mapConfig.maplibre.camera.animationDurationMs;
+	if(!window.matchMedia) return mapConfig.maplibre.camera.animationDurationMs;
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : mapConfig.maplibre.camera.animationDurationMs;
 }
 

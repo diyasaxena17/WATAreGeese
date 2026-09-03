@@ -17,6 +17,7 @@ vi.mock('../map-rendering', () => ({
 		canRenderDirections: false,
 		syncStartLocation,
 		syncEndLocation,
+		focusLocation: vi.fn(),
 		setLocationMarkers: vi.fn(),
 		displayRoute: vi.fn(() => () => {}),
 		recenterUserLocation
