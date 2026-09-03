@@ -19,6 +19,7 @@ import {
 	ROUTE_SOURCE_ID,
 	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingLabelOpacity,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
 	campusBuildingSource,
@@ -170,9 +171,10 @@ export function useMapLibreMapRenderer(
 	}, [displayedRoute, highlightedDirection]);
 
 	useEffect(() => {
-		setPaintProperty(mapRef.current, 'campus-path-line-casing', 'line-opacity', hasRoute ? 0.35 : 0.68);
+		setPaintProperty(mapRef.current, 'campus-path-line-casing', 'line-opacity', hasRoute ? 0.35 : 0.62);
 		setPaintProperty(mapRef.current, 'campus-path-lines', 'line-opacity', campusPathLineOpacity(hasRoute));
 		setPaintProperty(mapRef.current, 'campus-path-points', 'circle-opacity', campusPathPointOpacity(hasRoute));
+		setPaintProperty(mapRef.current, 'campus-building-labels', 'text-opacity', campusBuildingLabelOpacity(hasRoute));
 	}, [hasRoute]);
 
 	useEffect(() => {

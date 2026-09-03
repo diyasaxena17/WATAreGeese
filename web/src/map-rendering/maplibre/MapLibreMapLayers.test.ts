@@ -12,6 +12,7 @@ import {
 	ROUTE_SOURCE_ID,
 	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingLabelOpacity,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
 	campusBuildingSource,
@@ -19,6 +20,7 @@ import {
 	campusPathLineOpacity,
 	campusPathPointOpacity,
 	campusPathLayers,
+	mapLibreVisualTheme,
 	routeLayers,
 	routeToGeoJson,
 	selectedBuildingLayers,
@@ -46,7 +48,7 @@ describe('MapLibre campus building layers', () => {
 			paint: {
 				'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
 				'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
-				'fill-extrusion-opacity': 0.62
+				'fill-extrusion-opacity': mapLibreVisualTheme.building.extrusionOpacity
 			}
 		});
 	});
@@ -88,6 +90,23 @@ describe('MapLibre campus building layers', () => {
 		]);
 	});
 
+	it('dims building labels when a route is active so route geometry stays dominant', () => {
+		expect(campusBuildingLabelLayer.paint?.['text-opacity']).toEqual(campusBuildingLabelOpacity(false));
+		expect(campusBuildingLabelOpacity(true)).toEqual([
+			'interpolate',
+			['linear'],
+			['zoom'],
+			15,
+			0.3,
+			16.8,
+			0.5,
+			17,
+			0.58,
+			18,
+			0.68
+		]);
+	});
+
 	it('keeps selected location labels collision-aware and separate from route data', () => {
 		expect(selectedLocationLabelLayer).toMatchObject({
 			id: 'selected-location-labels',
@@ -99,7 +118,7 @@ describe('MapLibre campus building layers', () => {
 				'text-ignore-placement': false
 			},
 			paint: {
-				'text-opacity': 0.94
+				'text-opacity': 0.92
 			}
 		});
 		expect(selectedLocationLabelLayer.source).not.toBe(ROUTE_SOURCE_ID);

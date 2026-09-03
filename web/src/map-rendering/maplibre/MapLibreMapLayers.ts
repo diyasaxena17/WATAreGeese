@@ -12,6 +12,54 @@ export const SELECTED_BUILDING_SOURCE_ID = 'selected-building-outline';
 export const CAMPUS_PATH_SOURCE_ID = 'campus-paths';
 export const ROUTE_SOURCE_ID = 'active-route';
 
+export const mapLibreVisualTheme = {
+	building: {
+		extrusionColor: '#d6d0c4',
+		extrusionOpacity: 0.56
+	},
+	selectedBuilding: {
+		fillColor: '#f2a23a',
+		fillOpacity: 0.12,
+		outlineColor: '#8b5a16',
+		outlineOpacity: 0.76
+	},
+	label: {
+		textColor: '#26332f',
+		haloColor: '#f7f3ea',
+		endpointTextColor: '#17211e',
+		endpointHaloColor: '#ffffff'
+	},
+	marker: {
+		startColor: '#1d4ed8',
+		destinationColor: '#111827',
+		userColor: '#2563eb',
+		haloColor: '#ffffff'
+	},
+	path: {
+		casingColor: '#f7f3ea',
+		bridgeColor: '#3f7f65',
+		hallwayColor: '#7d91ad',
+		tunnelColor: '#9a8a77',
+		walkwayColor: '#bd8574',
+		fallbackColor: '#798071',
+		doorColor: '#4f9b70',
+		openColor: '#5f7fa6',
+		stairsColor: '#a98245'
+	},
+	route: {
+		haloColor: '#ffffff',
+		highlightColor: '#f2a23a',
+		highlightPointColor: '#f59e0b',
+		strokeColor: '#111827',
+		bridgeColor: '#237052',
+		hallwayColor: '#456eaa',
+		tunnelColor: '#77634f',
+		walkwayColor: '#ba5f4b',
+		stairsColor: '#a66d20',
+		fallbackColor: '#3f4a43'
+	}
+} as const;
+
 export function campusBuildingSource(outlines: BuildingOutlineFeature[]): GeoJSONSourceSpecification {
 	return {
 		type: 'geojson',
@@ -27,10 +75,10 @@ export const campusBuildingExtrusionLayer: LayerSpecification = {
 	type: 'fill-extrusion',
 	source: CAMPUS_BUILDING_SOURCE_ID,
 	paint: {
-		'fill-extrusion-color': '#d8d0c3',
+		'fill-extrusion-color': mapLibreVisualTheme.building.extrusionColor,
 		'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
 		'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
-		'fill-extrusion-opacity': 0.62
+		'fill-extrusion-opacity': mapLibreVisualTheme.building.extrusionOpacity
 	}
 };
 
@@ -40,8 +88,8 @@ export const selectedBuildingLayers: LayerSpecification[] = [
 		type: 'fill',
 		source: SELECTED_BUILDING_SOURCE_ID,
 		paint: {
-			'fill-color': '#f2a23a',
-			'fill-opacity': 0.16
+			'fill-color': mapLibreVisualTheme.selectedBuilding.fillColor,
+			'fill-opacity': mapLibreVisualTheme.selectedBuilding.fillOpacity
 		}
 	},
 	{
@@ -53,8 +101,8 @@ export const selectedBuildingLayers: LayerSpecification[] = [
 			'line-join': 'round'
 		},
 		paint: {
-			'line-color': '#8b5a16',
-			'line-opacity': 0.82,
+			'line-color': mapLibreVisualTheme.selectedBuilding.outlineColor,
+			'line-opacity': mapLibreVisualTheme.selectedBuilding.outlineOpacity,
 			'line-width': [
 				'interpolate',
 				['linear'],
@@ -73,6 +121,22 @@ export function campusBuildingLabelSource(buildings: BuildingsGeoJson): GeoJSONS
 		type: 'geojson',
 		data: buildings
 	};
+}
+
+export function campusBuildingLabelOpacity(dimmed: boolean) {
+	return [
+		'interpolate',
+		['linear'],
+		['zoom'],
+		15,
+		dimmed ? 0.3 : 0.42,
+		16.8,
+		dimmed ? 0.5 : 0.64,
+		17,
+		dimmed ? 0.58 : 0.72,
+		18,
+		dimmed ? 0.68 : 0.82
+	];
 }
 
 export const campusBuildingLabelLayer: LayerSpecification = {
@@ -108,23 +172,11 @@ export const campusBuildingLabelLayer: LayerSpecification = {
 		'symbol-sort-key': ['-', 12, ['length', ['get', 'floors', ['get', 'building']]]]
 	},
 	paint: {
-		'text-color': '#26332f',
-		'text-halo-color': '#f7f3ea',
+		'text-color': mapLibreVisualTheme.label.textColor,
+		'text-halo-color': mapLibreVisualTheme.label.haloColor,
 		'text-halo-width': 1.4,
 		'text-halo-blur': 0.35,
-		'text-opacity': [
-			'interpolate',
-			['linear'],
-			['zoom'],
-			15,
-			0.48,
-			16.8,
-			0.72,
-			17,
-			0.82,
-			18,
-			0.9
-		]
+		'text-opacity': campusBuildingLabelOpacity(false)
 	}
 };
 
@@ -152,11 +204,11 @@ export const selectedLocationLabelLayer: LayerSpecification = {
 		'text-padding': 10
 	},
 	paint: {
-		'text-color': '#17211e',
-		'text-halo-color': '#ffffff',
+		'text-color': mapLibreVisualTheme.label.endpointTextColor,
+		'text-halo-color': mapLibreVisualTheme.label.endpointHaloColor,
 		'text-halo-width': 1.8,
 		'text-halo-blur': 0.25,
-		'text-opacity': 0.94
+		'text-opacity': 0.92
 	}
 };
 
@@ -171,8 +223,8 @@ export const locationMarkerLayers: LayerSpecification[] = [
 			['has', 'accuracyMeters']
 		],
 		paint: {
-			'circle-color': '#2563eb',
-			'circle-opacity': 0.12,
+			'circle-color': mapLibreVisualTheme.marker.userColor,
+			'circle-opacity': 0.1,
 			'circle-radius': [
 				'interpolate',
 				['linear'],
@@ -182,7 +234,7 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				60,
 				28
 			],
-			'circle-stroke-color': '#ffffff',
+			'circle-stroke-color': mapLibreVisualTheme.marker.haloColor,
 			'circle-stroke-opacity': 0.55,
 			'circle-stroke-width': 1
 		}
@@ -192,15 +244,15 @@ export const locationMarkerLayers: LayerSpecification[] = [
 		type: 'circle',
 		source: LOCATION_MARKER_SOURCE_ID,
 		paint: {
-			'circle-color': '#ffffff',
+			'circle-color': mapLibreVisualTheme.marker.haloColor,
 			'circle-radius': [
 				'match',
 				['get', 'kind'],
 				'start',
 				10,
 				'end',
-				11,
-				8
+				10,
+				7.5
 			],
 			'circle-opacity': [
 				'match',
@@ -213,10 +265,10 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				'match',
 				['get', 'kind'],
 				'start',
-				'#2563eb',
+				mapLibreVisualTheme.marker.startColor,
 				'end',
-				'#111827',
-				'#2563eb'
+				mapLibreVisualTheme.marker.destinationColor,
+				mapLibreVisualTheme.marker.userColor
 			],
 			'circle-stroke-width': [
 				'match',
@@ -236,19 +288,19 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				'match',
 				['get', 'kind'],
 				'start',
-				'#ffffff',
+				mapLibreVisualTheme.marker.haloColor,
 				'end',
-				'#111827',
-				'#2563eb'
+				mapLibreVisualTheme.marker.destinationColor,
+				mapLibreVisualTheme.marker.userColor
 			],
 			'circle-radius': [
 				'match',
 				['get', 'kind'],
 				'start',
-				5,
+				5.2,
 				'end',
-				5.5,
-				4.5
+				5.2,
+				4.2
 			],
 			'circle-opacity': 0.98
 		}
@@ -270,15 +322,15 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				'match',
 				['get', 'kind'],
 				'start',
-				'#1d4ed8',
-				'#ffffff'
+				mapLibreVisualTheme.marker.startColor,
+				mapLibreVisualTheme.marker.haloColor
 			],
 			'text-halo-color': [
 				'match',
 				['get', 'kind'],
 				'start',
-				'#ffffff',
-				'#111827'
+				mapLibreVisualTheme.marker.haloColor,
+				mapLibreVisualTheme.marker.destinationColor
 			],
 			'text-halo-width': 0.4
 		}
@@ -317,16 +369,16 @@ export const campusPathLayers: LayerSpecification[] = [
 			'line-join': 'round'
 		},
 		paint: {
-			'line-color': '#f7f3ea',
-			'line-opacity': 0.68,
+			'line-color': mapLibreVisualTheme.path.casingColor,
+			'line-opacity': 0.62,
 			'line-width': [
 				'match',
 				['get', 'type'],
 				CAMPUS_FEATURE_TYPES.BRIDGE,
-				7,
+				6.4,
 				CAMPUS_FEATURE_TYPES.TUNNEL,
-				5,
-				6
+				4.6,
+				5.2
 			]
 		}
 	},
@@ -344,14 +396,14 @@ export const campusPathLayers: LayerSpecification[] = [
 				'match',
 				['get', 'type'],
 				CAMPUS_FEATURE_TYPES.BRIDGE,
-				'#3f7f65',
+				mapLibreVisualTheme.path.bridgeColor,
 				CAMPUS_FEATURE_TYPES.HALLWAY,
-				'#7d91ad',
+				mapLibreVisualTheme.path.hallwayColor,
 				CAMPUS_FEATURE_TYPES.TUNNEL,
-				'#9a8a77',
+				mapLibreVisualTheme.path.tunnelColor,
 				CAMPUS_FEATURE_TYPES.WALKWAY,
-				'#bd8574',
-				'#798071'
+				mapLibreVisualTheme.path.walkwayColor,
+				mapLibreVisualTheme.path.fallbackColor
 			],
 			'line-dasharray': [
 				'match',
@@ -365,10 +417,10 @@ export const campusPathLayers: LayerSpecification[] = [
 				'match',
 				['get', 'type'],
 				CAMPUS_FEATURE_TYPES.BRIDGE,
-				4.4,
+				4,
 				CAMPUS_FEATURE_TYPES.TUNNEL,
-				3,
-				3.6
+				2.6,
+				3.2
 			]
 		}
 	},
@@ -382,12 +434,12 @@ export const campusPathLayers: LayerSpecification[] = [
 				'match',
 				['get', 'type'],
 				CAMPUS_FEATURE_TYPES.DOOR,
-				'#4f9b70',
+				mapLibreVisualTheme.path.doorColor,
 				CAMPUS_FEATURE_TYPES.OPEN,
-				'#5f7fa6',
+				mapLibreVisualTheme.path.openColor,
 				CAMPUS_FEATURE_TYPES.STAIRS,
-				'#a98245',
-				'#798071'
+				mapLibreVisualTheme.path.stairsColor,
+				mapLibreVisualTheme.path.fallbackColor
 			],
 			'circle-opacity': campusPathPointOpacity(false),
 			'circle-radius': [
@@ -412,9 +464,9 @@ export const routeLayers: LayerSpecification[] = [
 			'line-join': 'round'
 		},
 		paint: {
-			'line-color': '#ffffff',
+			'line-color': mapLibreVisualTheme.route.haloColor,
 			'line-width': ['get', 'haloWidth'],
-			'line-opacity': 0.86
+			'line-opacity': 0.9
 		}
 	},
 	{
@@ -450,7 +502,7 @@ export const routeLayers: LayerSpecification[] = [
 			'line-join': 'round'
 		},
 		paint: {
-			'line-color': '#f2a23a',
+			'line-color': mapLibreVisualTheme.route.highlightColor,
 			'line-width': ['get', 'highlightWidth'],
 			'line-opacity': 1
 		}
@@ -464,7 +516,7 @@ export const routeLayers: LayerSpecification[] = [
 			'circle-color': ['get', 'color'],
 			'circle-radius': ['get', 'radius'],
 			'circle-opacity': 0.95,
-			'circle-stroke-color': '#111827',
+			'circle-stroke-color': mapLibreVisualTheme.route.strokeColor,
 			'circle-stroke-width': 2
 		}
 	}
@@ -483,8 +535,8 @@ export function routeToGeoJson(route: Route | null, highlightedDirection: number
 				return [{
 					type: 'Feature' as const,
 					properties: {
-						color: isHighlighted ? '#f59e0b' : routeColor(graphLocation),
-						radius: isHighlighted ? 7 : 5,
+						color: isHighlighted ? mapLibreVisualTheme.route.highlightPointColor : routeColor(graphLocation),
+						radius: isHighlighted ? 7.2 : 5.2,
 						isHighlighted
 					},
 					geometry: {
@@ -497,10 +549,10 @@ export function routeToGeoJson(route: Route | null, highlightedDirection: number
 			return [{
 				type: 'Feature' as const,
 				properties: {
-					color: isHighlighted ? '#f59e0b' : routeColor(graphLocation),
-					width: 6,
-					haloWidth: isHighlighted ? 13 : 11,
-					highlightWidth: 8,
+					color: isHighlighted ? mapLibreVisualTheme.route.highlightPointColor : routeColor(graphLocation),
+					width: 6.2,
+					haloWidth: isHighlighted ? 13.5 : 11.5,
+					highlightWidth: 8.6,
 					isHighlighted,
 					segmentIndex: index
 				},
@@ -518,12 +570,12 @@ function routeColor(graphLocation: GraphLocation) {
 }
 
 function pathColor(type: CampusFeatureType) {
-	if(type == CAMPUS_FEATURE_TYPES.BRIDGE) return '#237052';
-	if(type == CAMPUS_FEATURE_TYPES.HALLWAY) return '#456eaa';
-	if(type == CAMPUS_FEATURE_TYPES.TUNNEL) return '#77634f';
-	if(type == CAMPUS_FEATURE_TYPES.WALKWAY) return '#ba5f4b';
-	if(type == CAMPUS_FEATURE_TYPES.DOOR) return '#237052';
-	if(type == CAMPUS_FEATURE_TYPES.OPEN) return '#456eaa';
-	if(type == CAMPUS_FEATURE_TYPES.STAIRS) return '#a66d20';
-	return '#3f4a43';
+	if(type == CAMPUS_FEATURE_TYPES.BRIDGE) return mapLibreVisualTheme.route.bridgeColor;
+	if(type == CAMPUS_FEATURE_TYPES.HALLWAY) return mapLibreVisualTheme.route.hallwayColor;
+	if(type == CAMPUS_FEATURE_TYPES.TUNNEL) return mapLibreVisualTheme.route.tunnelColor;
+	if(type == CAMPUS_FEATURE_TYPES.WALKWAY) return mapLibreVisualTheme.route.walkwayColor;
+	if(type == CAMPUS_FEATURE_TYPES.DOOR) return mapLibreVisualTheme.route.bridgeColor;
+	if(type == CAMPUS_FEATURE_TYPES.OPEN) return mapLibreVisualTheme.route.hallwayColor;
+	if(type == CAMPUS_FEATURE_TYPES.STAIRS) return mapLibreVisualTheme.route.stairsColor;
+	return mapLibreVisualTheme.route.fallbackColor;
 }
