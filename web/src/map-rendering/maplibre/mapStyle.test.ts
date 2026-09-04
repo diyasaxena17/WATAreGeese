@@ -18,16 +18,16 @@ describe('createSoftCampusMapStyle', () => {
 		});
 	});
 
-	it('keeps the basemap visually subordinate to campus overlays', () => {
+	it('keeps the basemap detailed while still subordinate to campus overlays', () => {
 		const style = createSoftCampusMapStyle('tiles', 'attribution');
 		const basemapLayer = style.layers.find(layer => layer.id == BASEMAP_LAYER_ID);
 
 		expect(basemapLayer).toMatchObject({
 			type: 'raster',
 			paint: {
-				'raster-opacity': 0.68,
-				'raster-saturation': -0.72,
-				'raster-contrast': -0.22
+				'raster-opacity': 0.92,
+				'raster-saturation': -0.18,
+				'raster-contrast': -0.08
 			}
 		});
 	});

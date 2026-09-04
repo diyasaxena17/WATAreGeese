@@ -59,12 +59,12 @@ export function createSoftCampusMapStyle(
 				type: 'raster',
 				source: BASEMAP_SOURCE_ID,
 				paint: {
-					'raster-opacity': 0.68,
-					'raster-saturation': -0.72,
-					'raster-contrast': -0.22,
-					'raster-brightness-min': 0.16,
-					'raster-brightness-max': 0.96,
-					'raster-hue-rotate': 8
+					'raster-opacity': 0.92,
+					'raster-saturation': -0.18,
+					'raster-contrast': -0.08,
+					'raster-brightness-min': 0.05,
+					'raster-brightness-max': 1,
+					'raster-hue-rotate': 0
 				}
 			}
 		]
