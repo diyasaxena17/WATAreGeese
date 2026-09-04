@@ -25,7 +25,7 @@ export function createSoftCampusMapStyle(
 		sources: {
 			[BASEMAP_SOURCE_ID]: {
 				type: 'raster',
-				tiles: [tileUrl],
+				tiles: mapLibreRasterTileUrls(tileUrl),
 				tileSize: 256,
 				attribution
 			},
@@ -69,4 +69,10 @@ export function createSoftCampusMapStyle(
 			}
 		]
 	};
+}
+
+export function mapLibreRasterTileUrls(tileUrl: string) {
+	if(!tileUrl.includes('{s}')) return [tileUrl];
+
+	return ['a', 'b', 'c'].map(subdomain => tileUrl.replace('{s}', subdomain));
 }
