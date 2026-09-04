@@ -19,11 +19,27 @@ export const mapConfig = {
 			selectedBuildingZoom: 18,
 			userLocationZoom: 17.2,
 			animationDurationMs: 800,
-			routeBoundsPadding: 96
+			routeBoundsPadding: 96,
+			mobileRouteBoundsPadding: {
+				top: 72,
+				right: 48,
+				bottom: 360,
+				left: 48
+			}
 		},
 		buildings: {
 			extrusionBaseHeight: 0,
 			defaultExtrusionHeight: 18
+		},
+		terrain: {
+			enabled: true,
+			sourceId: 'mapzen-terrain-dem',
+			tileUrl: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+			attribution: 'Elevation tiles &copy; Mapzen',
+			tileSize: 256,
+			maxzoom: 15,
+			encoding: 'terrarium' as const,
+			exaggeration: 1.15
 		}
 	}
 };

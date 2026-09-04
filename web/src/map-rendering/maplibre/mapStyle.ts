@@ -1,20 +1,51 @@
-import { StyleSpecification } from 'maplibre-gl';
+import type { StyleSpecification } from 'maplibre-gl';
 
 export const BASEMAP_SOURCE_ID = 'basemap';
 export const BASEMAP_LAYER_ID = 'basemap-muted-raster';
 
-export function createSoftCampusMapStyle(tileUrl: string, attribution: string): StyleSpecification {
+type TerrainStyleConfig = {
+	enabled: boolean;
+	sourceId: string;
+	tileUrl: string;
+	attribution: string;
+	tileSize: number;
+	maxzoom: number;
+	encoding: 'terrarium' | 'mapbox';
+	exaggeration: number;
+};
+
+export function createSoftCampusMapStyle(
+	tileUrl: string,
+	attribution: string,
+	terrain?: TerrainStyleConfig
+): StyleSpecification {
 	return {
 		version: 8,
 		glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
 		sources: {
 			[BASEMAP_SOURCE_ID]: {
 				type: 'raster',
-				tiles: [tileUrl],
+				tiles: mapLibreRasterTileUrls(tileUrl),
 				tileSize: 256,
 				attribution
-			}
+			},
+			...(terrain?.enabled ? {
+				[terrain.sourceId]: {
+					type: 'raster-dem' as const,
+					tiles: [terrain.tileUrl],
+					tileSize: terrain.tileSize,
+					maxzoom: terrain.maxzoom,
+					encoding: terrain.encoding,
+					attribution: terrain.attribution
+				}
+			} : {})
 		},
+		...(terrain?.enabled ? {
+			terrain: {
+				source: terrain.sourceId,
+				exaggeration: terrain.exaggeration
+			}
+		} : {}),
 		layers: [
 			{
 				id: 'background-warm-canvas',
@@ -28,14 +59,20 @@ export function createSoftCampusMapStyle(tileUrl: string, attribution: string): 
 				type: 'raster',
 				source: BASEMAP_SOURCE_ID,
 				paint: {
-					'raster-opacity': 0.68,
-					'raster-saturation': -0.72,
-					'raster-contrast': -0.22,
-					'raster-brightness-min': 0.16,
-					'raster-brightness-max': 0.96,
-					'raster-hue-rotate': 8
+					'raster-opacity': 1,
+					'raster-saturation': 0,
+					'raster-contrast': 0,
+					'raster-brightness-min': 0,
+					'raster-brightness-max': 1,
+					'raster-hue-rotate': 0
 				}
 			}
 		]
 	};
+}
+
+export function mapLibreRasterTileUrls(tileUrl: string) {
+	if(!tileUrl.includes('{s}')) return [tileUrl];
+
+	return ['a', 'b', 'c'].map(subdomain => tileUrl.replace('{s}', subdomain));
 }

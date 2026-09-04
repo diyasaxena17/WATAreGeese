@@ -1,6 +1,5 @@
-import { useEffect, useRef } from 'react';
-
 import { Route } from '../../routing/types';
+import { cx } from '../../components/ui/utils';
 import DirectionsList from './DirectionsList';
 import RouteSummary from './RouteSummary';
 import { RouteEndpointSummary } from './types';
@@ -27,26 +26,8 @@ export default function DirectionsPanel({
     onClearHighlight,
     onSelectDirection
 }: DirectionsPanelProps) {
-    const panelRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        if(selectedDirection == null) return;
-
-        const handlePointerDown = (event: PointerEvent) => {
-            const target = event.target;
-            if(!(target instanceof Element)) return;
-            if(target.closest('[data-direction-step]')) return;
-
-            onClearHighlight();
-        };
-
-        document.addEventListener('pointerdown', handlePointerDown);
-        return () => document.removeEventListener('pointerdown', handlePointerDown);
-    }, [onClearHighlight, selectedDirection]);
-
     return (
         <div
-            ref={panelRef}
             id={variant == 'mobile' ? 'mobile-directions' : 'directions'}
             className={variant == 'mobile'
                 ? 'block lg:hidden'
@@ -59,7 +40,14 @@ export default function DirectionsPanel({
                         <RouteSummary route={route} from={from} to={to} onChangeRoute={onChangeRoute} />
                         <section aria-label="Directions" className="space-y-2">
                             <h2 className="text-wg-section-title">Directions</h2>
-                            <div className="max-h-[min(52svh,32rem)] overflow-y-auto pr-1">
+                            <div
+                                className={cx(
+                                    'overflow-y-auto pr-1',
+                                    variant == 'mobile'
+                                        ? 'max-h-[min(30svh,16rem)]'
+                                        : 'max-h-[min(52svh,32rem)]'
+                                )}
+                            >
                                 <DirectionsList
                                     route={route}
                                     selectedDirection={selectedDirection}

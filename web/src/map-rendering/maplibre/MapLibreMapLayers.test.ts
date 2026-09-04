@@ -6,17 +6,27 @@ import { mapConfig } from '../../features/map/config/mapConfig';
 import {
 	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
+	LOCATION_LABEL_SOURCE_ID,
+	LOCATION_MARKER_SOURCE_ID,
 	CAMPUS_PATH_SOURCE_ID,
 	ROUTE_SOURCE_ID,
+	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingExtrusionOpacity,
+	campusBuildingLabelOpacity,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
 	campusBuildingSource,
+	locationMarkerLayers,
 	campusPathLineOpacity,
 	campusPathPointOpacity,
 	campusPathLayers,
+	mapLibreVisualTheme,
 	routeLayers,
-	routeToGeoJson
+	routePointHighlightLayer,
+	routeToGeoJson,
+	selectedBuildingLayers,
+	selectedLocationLabelLayer
 } from './MapLibreMapLayers';
 
 describe('MapLibre campus building layers', () => {
@@ -40,9 +50,17 @@ describe('MapLibre campus building layers', () => {
 			paint: {
 				'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
 				'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
-				'fill-extrusion-opacity': 0.62
+				'fill-extrusion-opacity': mapLibreVisualTheme.building.extrusionOpacity
 			}
 		});
+	});
+
+	it('fades building extrusions while directions are active without flattening the 3D context', () => {
+		expect(campusBuildingExtrusionOpacity(false)).toBe(mapLibreVisualTheme.building.extrusionOpacity);
+		expect(campusBuildingExtrusionOpacity(true)).toBeLessThan(campusBuildingExtrusionOpacity(false));
+		expect(campusBuildingExtrusionOpacity(true)).toBeGreaterThan(0.35);
+		expect(campusBuildingExtrusionLayer.paint?.['fill-extrusion-height'])
+			.toBe(mapConfig.maplibre.buildings.defaultExtrusionHeight);
 	});
 
 	it('uses existing building point data for campus labels', () => {
@@ -59,6 +77,92 @@ describe('MapLibre campus building layers', () => {
 			source: CAMPUS_BUILDING_LABEL_SOURCE_ID
 		});
 		expect(campusBuildingLabelLayer.layout?.['text-field']).toEqual(['get', 'buildingCode', ['get', 'building']]);
+	});
+
+	it('uses collision-aware zoom hierarchy for campus labels', () => {
+		expect(campusBuildingLabelLayer.minzoom).toBe(15);
+		expect(campusBuildingLabelLayer.filter).toEqual([
+			'any',
+			['>=', ['zoom'], 16.8],
+			['>=', ['length', ['get', 'floors', ['get', 'building']]], 5]
+		]);
+		expect(campusBuildingLabelLayer.layout).toMatchObject({
+			'text-allow-overlap': false,
+			'text-ignore-placement': false,
+			'text-optional': true,
+			'text-padding': 8
+		});
+		expect(campusBuildingLabelLayer.layout?.['text-variable-anchor']).toContain('center');
+		expect(campusBuildingLabelLayer.layout?.['symbol-sort-key']).toEqual([
+			'-',
+			12,
+			['length', ['get', 'floors', ['get', 'building']]]
+		]);
+	});
+
+	it('dims building labels when a route is active so route geometry stays dominant', () => {
+		expect(campusBuildingLabelLayer.paint?.['text-opacity']).toEqual(campusBuildingLabelOpacity(false));
+		expect(campusBuildingLabelOpacity(true)).toEqual([
+			'interpolate',
+			['linear'],
+			['zoom'],
+			15,
+			0.3,
+			16.8,
+			0.5,
+			17,
+			0.58,
+			18,
+			0.68
+		]);
+	});
+
+	it('keeps selected location labels collision-aware and separate from route data', () => {
+		expect(selectedLocationLabelLayer).toMatchObject({
+			id: 'selected-location-labels',
+			type: 'symbol',
+			source: LOCATION_LABEL_SOURCE_ID,
+			layout: {
+				'text-field': ['get', 'label'],
+				'text-allow-overlap': false,
+				'text-ignore-placement': false
+			},
+			paint: {
+				'text-opacity': 0.92
+			}
+		});
+		expect(selectedLocationLabelLayer.source).not.toBe(ROUTE_SOURCE_ID);
+	});
+
+	it('uses restrained selected-building fill and outline layers', () => {
+		expect(selectedBuildingLayers.map(layer => layer.id)).toEqual([
+			'selected-building-fill',
+			'selected-building-outline'
+		]);
+		expect(selectedBuildingLayers.every(layer => layer.source == SELECTED_BUILDING_SOURCE_ID)).toBe(true);
+		expect(selectedBuildingLayers[0].paint?.['fill-opacity']).toBeLessThan(0.2);
+		expect(selectedBuildingLayers[1].type).toBe('line');
+	});
+});
+
+describe('MapLibre location marker layers', () => {
+	it('orders marker layers by accuracy, halo, core, and endpoint glyphs', () => {
+		expect(locationMarkerLayers.map(layer => layer.id)).toEqual([
+			'location-marker-accuracy',
+			'location-marker-halo',
+			'location-marker-core',
+			'location-marker-glyphs'
+		]);
+		expect(locationMarkerLayers.every(layer => layer.source == LOCATION_MARKER_SOURCE_ID)).toBe(true);
+	});
+
+	it('distinguishes endpoints with glyphs instead of tiny color differences alone', () => {
+		const glyphLayer = locationMarkerLayers.find(layer => layer.id == 'location-marker-glyphs');
+
+		expect(glyphLayer?.type).toBe('symbol');
+		expect(glyphLayer?.filter).toEqual(['!=', ['get', 'kind'], 'user']);
+		expect(glyphLayer?.layout?.['text-field']).toEqual(['get', 'glyph']);
+		expect(glyphLayer?.layout?.['text-allow-overlap']).toBe(true);
 	});
 });
 
@@ -111,6 +215,36 @@ describe('MapLibre route layers', () => {
 			'active-route-points'
 		]);
 		expect(routeLayers.every(layer => layer.source == ROUTE_SOURCE_ID)).toBe(true);
+		expect(routePointHighlightLayer).toMatchObject({
+			id: 'active-route-point-highlight',
+			type: 'circle',
+			source: ROUTE_SOURCE_ID,
+			filter: [
+				'all',
+				['==', ['geometry-type'], 'Point'],
+				['==', ['get', 'isHighlighted'], true]
+			],
+			paint: {
+				'circle-color': mapLibreVisualTheme.route.highlightColor
+			}
+		});
+	});
+
+	it('uses wide route strokes and halos so directions remain visible over 3D buildings', () => {
+		const route = {
+			graphLocations: [
+				{ path: [[-80, 43]], travelMode: null },
+				{ path: [[-80.1, 43.1], [-80.2, 43.2]], travelMode: CAMPUS_FEATURE_TYPES.WALKWAY },
+				{ path: [[-80.2, 43.2], [-80.3, 43.3]], travelMode: CAMPUS_FEATURE_TYPES.BRIDGE }
+			]
+		};
+
+		const geoJson = routeToGeoJson(route as never, 2);
+
+		expect(geoJson.features[0].properties.width).toBeGreaterThanOrEqual(7);
+		expect(geoJson.features[0].properties.haloWidth).toBeGreaterThanOrEqual(15);
+		expect(geoJson.features[1].properties.highlightWidth).toBeGreaterThanOrEqual(10);
+		expect(geoJson.features[1].properties.haloWidth).toBeGreaterThan(geoJson.features[0].properties.haloWidth);
 	});
 
 	it('maps highlighted route state without changing route coordinates', () => {
@@ -132,5 +266,23 @@ describe('MapLibre route layers', () => {
 		expect(geoJson.features[1].geometry.coordinates).toBe(highlightedPath);
 		expect(geoJson.features[1].properties.isHighlighted).toBe(true);
 		expect(geoJson.features[1].properties.segmentIndex).toBe(2);
+	});
+
+	it('uses the same highlight colour for point-only selected steps as highlighted line steps', () => {
+		const endpointPath = [[-80.1, 43.1]] as [number, number][];
+		const route = {
+			graphLocations: [
+				{ path: [[-80, 43]], travelMode: null },
+				{ path: endpointPath, travelMode: CAMPUS_FEATURE_TYPES.WALKWAY }
+			]
+		};
+
+		const geoJson = routeToGeoJson(route as never, 1);
+
+		expect(geoJson.features).toHaveLength(1);
+		expect(geoJson.features[0].geometry.coordinates).toEqual(endpointPath[0]);
+		expect(geoJson.features[0].properties.isHighlighted).toBe(true);
+		expect(geoJson.features[0].properties.segmentIndex).toBe(1);
+		expect(geoJson.features[0].properties.color).toBe(mapLibreVisualTheme.route.highlightColor);
 	});
 });

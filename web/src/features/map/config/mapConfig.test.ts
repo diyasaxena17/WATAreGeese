@@ -24,6 +24,9 @@ describe('mapConfig', () => {
 		expect(mapConfig.maplibre.camera.routeZoom).toBeGreaterThan(mapConfig.maplibre.camera.defaultZoom);
 		expect(mapConfig.maplibre.camera.selectedBuildingZoom).toBeGreaterThan(mapConfig.maplibre.camera.routeZoom);
 		expect(mapConfig.maplibre.camera.routeBoundsPadding).toBeGreaterThan(0);
+		expect(mapConfig.maplibre.camera.mobileRouteBoundsPadding.bottom).toBeGreaterThan(
+			mapConfig.maplibre.camera.mobileRouteBoundsPadding.top
+		);
 		expect(mapConfig.maplibre.camera.animationDurationMs).toBeGreaterThan(0);
 	});
 
@@ -31,5 +34,19 @@ describe('mapConfig', () => {
 		expect(mapConfig.maplibre.buildings.extrusionBaseHeight).toBe(0);
 		expect(mapConfig.maplibre.buildings.defaultExtrusionHeight).toBeGreaterThan(0);
 		expect(mapConfig.maplibre.buildings.defaultExtrusionHeight).toBeLessThanOrEqual(20);
+	});
+
+	it('centralizes optional MapLibre terrain as a subtle rendering concern', () => {
+		expect(mapConfig.maplibre.terrain).toMatchObject({
+			enabled: true,
+			sourceId: 'mapzen-terrain-dem',
+			tileUrl: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+			attribution: 'Elevation tiles &copy; Mapzen',
+			tileSize: 256,
+			maxzoom: 15,
+			encoding: 'terrarium'
+		});
+		expect(mapConfig.maplibre.terrain.exaggeration).toBeGreaterThanOrEqual(1);
+		expect(mapConfig.maplibre.terrain.exaggeration).toBeLessThanOrEqual(1.3);
 	});
 });

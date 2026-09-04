@@ -1,4 +1,4 @@
-import { FormEvent, PointerEvent, useState, useEffect, useMemo, useRef } from 'react';
+import { FormEvent, PointerEvent, useCallback, useState, useEffect, useMemo, useRef } from 'react';
 
 import { BuildingSearchResult } from '../campus-data/buildingSearch';
 import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../map/locations';
@@ -42,7 +42,11 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const [showDirections, setShowDirections] = useState(false);
 	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
 	const sheetDragStartY = useRef<number | null>(null);
-	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection, userLocation.position);
+	const handleSelectRouteStep = useCallback((step: number) => {
+		setHighlightedDirection(step);
+		setShowDirections(true);
+	}, []);
+	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection, userLocation.position, handleSelectRouteStep);
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);
@@ -117,13 +121,17 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const handleStartBuildingChange = (building: BuildingSearchResult) => {
 		clearDisplayedRoute();
 		setStartBuilding(building);
-		setStartFloor(defaultFloor(floorsForBuilding(building, buildingFloorOptions)));
+		const nextFloor = defaultFloor(floorsForBuilding(building, buildingFloorOptions));
+		setStartFloor(nextFloor);
+		mapRenderer.focusLocation(locationForBuilding(building, nextFloor, startEndLocations));
 	};
 
 	const handleEndBuildingChange = (building: BuildingSearchResult) => {
 		clearDisplayedRoute();
 		setEndBuilding(building);
-		setEndFloor(defaultFloor(floorsForBuilding(building, buildingFloorOptions)));
+		const nextFloor = defaultFloor(floorsForBuilding(building, buildingFloorOptions));
+		setEndFloor(nextFloor);
+		mapRenderer.focusLocation(locationForBuilding(building, nextFloor, startEndLocations));
 	};
 
 	const handleStartFloorChange = (floor: string) => {
@@ -378,6 +386,11 @@ function floorsForBuilding(building: BuildingSearchResult, buildingFloorOptions:
 
 function defaultFloor(floors: string[]) {
 	return floors.includes('1') ? '1' : floors[0] ?? null;
+}
+
+function locationForBuilding(building: BuildingSearchResult, floor: string | null, startEndLocations: Map<string, Location>) {
+	if(!floor) return null;
+	return startEndLocations.get(`${building.buildingCode}|${floor}`) ?? null;
 }
 
 function routeModeForTunnellingPreference(preference: TunnellingPreference) {

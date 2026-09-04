@@ -17,13 +17,21 @@ describe('HomePage routing boundary', () => {
 		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
 
 		expect(source).toContain("import { useMapRenderer } from '../map-rendering'");
-		expect(source).toContain('useMapRenderer(hasRoute, highlightedDirection, userLocation.position)');
+		expect(source).toContain('useMapRenderer(hasRoute, highlightedDirection, userLocation.position, handleSelectRouteStep)');
 		expect(source).not.toContain('google.maps');
 		expect(source).not.toContain('useLoadMap');
 		expect(source).not.toContain('useGoogleMapsLibrary');
 		expect(source).not.toContain('useBaseGeoJson');
 		expect(source).not.toContain("from '../map/displayRoute'");
 		expect(source).not.toContain("from '../map/updateLocation'");
+	});
+
+	it('requests selected-building camera focus through the renderer boundary', () => {
+		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
+
+		expect(source).toContain('mapRenderer.focusLocation(locationForBuilding(building, nextFloor, startEndLocations))');
+		expect(source).not.toContain('easeTo');
+		expect(source).not.toContain('fitBounds');
 	});
 
 	it('does not import renderer implementations directly', () => {
@@ -37,9 +45,31 @@ describe('HomePage routing boundary', () => {
 	it('keeps MapLibre as the active renderer and exposes Leaflet as fallback through the boundary', () => {
 		const source = readFileSync(resolve(__dirname, '../map-rendering/index.ts'), 'utf8');
 
-		expect(source).toContain("export { useMapLibreMapRenderer as useMapRenderer } from './maplibre/MapLibreMapRenderer'");
+		expect(source).toContain("export { useLazyMapRenderer as useMapRenderer } from './LazyMapRenderer'");
 		expect(source).toContain("export { useLeafletMapRenderer } from './leaflet/LeafletMapRenderer'");
-		expect(source).toContain("export { useMapLibreMapRenderer } from './maplibre/MapLibreMapRenderer'");
+		expect(source).not.toContain("from './maplibre/MapLibreMapRenderer'");
+	});
+
+	it('lazy loads MapLibre behind the renderer boundary', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/LazyMapRenderer.tsx'), 'utf8');
+
+		expect(source).toContain("import('./maplibre/MapLibreMapRenderer')");
+		expect(source).toContain('<Suspense fallback={<MapRendererLoadingState />}>');
+		expect(source).not.toContain('maplibre-gl');
+	});
+
+	it('recovers to Leaflet through the renderer boundary without duplicating navigation state', () => {
+		const source = readFileSync(resolve(__dirname, '../map-rendering/LazyMapRenderer.tsx'), 'utf8');
+
+		expect(source).toContain("import('./leaflet/LeafletMapRenderer')");
+		expect(source).toContain('fallbackReason ?');
+		expect(source).toContain('<RendererFallbackNotice />');
+		expect(source).toContain('onRecoverableError={recoverToFallback}');
+		expect(source).toContain('hasRoute={hasRoute}');
+		expect(source).toContain('highlightedDirection={highlightedDirection}');
+		expect(source).toContain('userPosition={userPosition}');
+		expect(source).not.toContain('NavigationService');
+		expect(source).not.toContain('calculateRoute');
 	});
 
 	it('does not introduce Google, Mapbox, or paid-token map dependencies', () => {

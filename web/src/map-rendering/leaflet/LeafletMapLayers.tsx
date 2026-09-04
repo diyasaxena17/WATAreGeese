@@ -95,7 +95,15 @@ export function LocationMarkers({ start, end }: { start: Location | null, end: L
 	);
 }
 
-export function RouteLayers({ route, highlightedDirection }: { route: Route | null, highlightedDirection: number | null }) {
+export function RouteLayers({
+	route,
+	highlightedDirection,
+	onSelectRouteStep
+}: {
+	route: Route | null,
+	highlightedDirection: number | null,
+	onSelectRouteStep?: (step: number) => void
+}) {
 	if(!route) return null;
 
 	return (
@@ -117,6 +125,9 @@ export function RouteLayers({ route, highlightedDirection }: { route: Route | nu
 								fillOpacity: 0.95,
 								weight: isHighlighted ? 3 : 2
 							}}
+							eventHandlers={{
+								click: () => onSelectRouteStep?.(index)
+							}}
 						/>
 					);
 				}
@@ -129,6 +140,9 @@ export function RouteLayers({ route, highlightedDirection }: { route: Route | nu
 							color: isHighlighted ? 'var(--color-accent)' : routeColor(graphLocation),
 							weight: isHighlighted ? 8 : 6,
 							opacity: 1
+						}}
+						eventHandlers={{
+							click: () => onSelectRouteStep?.(index)
 						}}
 					/>
 				);

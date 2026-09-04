@@ -5,6 +5,7 @@ import { Route, Location } from '../routing/types';
 import { OptionType } from '../map/locations';
 
 export type RouteDisplayCleanup = () => void;
+export type RouteStepSelectHandler = (step: number) => void;
 
 export type MapLocationSyncRequest = {
 	building: OptionType | null;
@@ -23,6 +24,7 @@ export type MapRenderer = {
 	canRenderDirections: boolean;
 	syncStartLocation: (request: MapLocationSyncRequest) => Location | null;
 	syncEndLocation: (request: MapLocationSyncRequest) => Location | null;
+	focusLocation: (location: Location | null) => void;
 	setLocationMarkers: (start: Location | null, end: Location | null) => void;
 	displayRoute: (route: Route | null) => RouteDisplayCleanup;
 	recenterUserLocation: (position?: UserPosition | null) => void;

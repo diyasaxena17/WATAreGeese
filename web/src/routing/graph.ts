@@ -6,7 +6,7 @@ import { Coordinate, BuildingFloor, Location, Edge, GeoJsonLine, GeoJsonStairs, 
 const precision = 0.01;
 
 export class AdjacencyList {
-    private readonly _map: Map<String, Edge[]>;
+    private readonly _map: Map<string, Edge[]>;
 
     constructor(geoJson: GeoJson) {
         this._map = new Map();
@@ -14,7 +14,7 @@ export class AdjacencyList {
         // add lines as edges
         (geoJson.features.filter(f => f.geometry.type == 'LineString') as GeoJsonLine[])
         .map(f => {
-            let edges: Edge[] = [];
+            const edges: Edge[] = [];
             if(!(f.properties.start.buildingCode == f.properties.end.buildingCode &&
                 f.properties.start.floor == f.properties.end.floor)) {
                 // start and end point at different buildingfloors
