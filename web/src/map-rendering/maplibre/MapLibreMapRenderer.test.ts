@@ -7,6 +7,7 @@ import { BuildingFloor, Coordinate, Location } from '../../routing/types';
 import {
 	locationMarkersToGeoJson,
 	motionDuration,
+	isTerrainSourceError,
 	routeBoundsCameraOptions,
 	selectedBuildingToGeoJson,
 	selectedBuildingCameraOptions,
@@ -121,5 +122,15 @@ describe('MapLibre camera intents', () => {
 		expect(geoJson.features.every(feature =>
 			feature.properties.default.buildingCode == 'DC'
 		)).toBe(true);
+	});
+	it('keeps terrain source errors inside the MapLibre renderer boundary', () => {
+		expect(isTerrainSourceError({
+			sourceId: mapConfig.maplibre.terrain.sourceId,
+			error: new Error('DEM tile failed')
+		}, mapConfig.maplibre.terrain.sourceId)).toBe(true);
+		expect(isTerrainSourceError({
+			sourceId: 'basemap',
+			error: new Error('basemap tile failed')
+		}, mapConfig.maplibre.terrain.sourceId)).toBe(false);
 	});
 });

@@ -87,12 +87,13 @@ export function useMapLibreMapRenderer(
 
 	useEffect(() => {
 		if(!containerRef.current || mapRef.current) return;
+		const terrainConfig = mapConfig.maplibre.terrain;
 
 		let map: Map;
 		try {
 			map = new Map({
 				container: containerRef.current,
-				style: createSoftCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution),
+				style: createSoftCampusMapStyle(mapConfig.tileUrl, mapConfig.attribution, terrainConfig),
 				center: [mapConfig.center[1], mapConfig.center[0]],
 				zoom: mapConfig.maplibre.camera.defaultZoom,
 				pitch: mapConfig.maplibre.camera.defaultPitch,
@@ -115,6 +116,11 @@ export function useMapLibreMapRenderer(
 		mapRef.current = map;
 
 		map.on('error', event => {
+			if(isTerrainSourceError(event, terrainConfig.sourceId)) {
+				disableTerrain(map);
+				return;
+			}
+
 			const error = event.error;
 			if(isRecoverableRendererError(error)) onRecoverableError?.(error);
 		});
@@ -207,6 +213,18 @@ export function useMapLibreMapRenderer(
 			mapRef.current?.easeTo(userLocationCameraOptions(target));
 		}
 	}), [isReady, userPosition]);
+}
+
+export function isTerrainSourceError(event: { sourceId?: string; error?: unknown }, terrainSourceId: string) {
+	return event.sourceId == terrainSourceId;
+}
+
+function disableTerrain(map: Map) {
+	try {
+		map.setTerrain(null);
+	} catch {
+		// Terrain is optional. If disabling it fails, keep the renderer running flat.
+	}
 }
 
 function flyToSelectedBuilding(map: Map | null, location: Location | null) {

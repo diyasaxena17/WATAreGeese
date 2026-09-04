@@ -24,6 +24,16 @@ export const mapConfig = {
 		buildings: {
 			extrusionBaseHeight: 0,
 			defaultExtrusionHeight: 18
+		},
+		terrain: {
+			enabled: true,
+			sourceId: 'mapzen-terrain-dem',
+			tileUrl: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+			attribution: 'Elevation tiles &copy; Mapzen',
+			tileSize: 256,
+			maxzoom: 15,
+			encoding: 'terrarium' as const,
+			exaggeration: 1.15
 		}
 	}
 };

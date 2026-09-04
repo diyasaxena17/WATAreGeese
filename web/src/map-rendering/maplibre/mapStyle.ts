@@ -3,7 +3,22 @@ import type { StyleSpecification } from 'maplibre-gl';
 export const BASEMAP_SOURCE_ID = 'basemap';
 export const BASEMAP_LAYER_ID = 'basemap-muted-raster';
 
-export function createSoftCampusMapStyle(tileUrl: string, attribution: string): StyleSpecification {
+type TerrainStyleConfig = {
+	enabled: boolean;
+	sourceId: string;
+	tileUrl: string;
+	attribution: string;
+	tileSize: number;
+	maxzoom: number;
+	encoding: 'terrarium' | 'mapbox';
+	exaggeration: number;
+};
+
+export function createSoftCampusMapStyle(
+	tileUrl: string,
+	attribution: string,
+	terrain?: TerrainStyleConfig
+): StyleSpecification {
 	return {
 		version: 8,
 		glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
@@ -13,8 +28,24 @@ export function createSoftCampusMapStyle(tileUrl: string, attribution: string): 
 				tiles: [tileUrl],
 				tileSize: 256,
 				attribution
-			}
+			},
+			...(terrain?.enabled ? {
+				[terrain.sourceId]: {
+					type: 'raster-dem' as const,
+					tiles: [terrain.tileUrl],
+					tileSize: terrain.tileSize,
+					maxzoom: terrain.maxzoom,
+					encoding: terrain.encoding,
+					attribution: terrain.attribution
+				}
+			} : {})
 		},
+		...(terrain?.enabled ? {
+			terrain: {
+				source: terrain.sourceId,
+				exaggeration: terrain.exaggeration
+			}
+		} : {}),
 		layers: [
 			{
 				id: 'background-warm-canvas',

@@ -10,6 +10,7 @@ React
   -> Leaflet fallback renderer
   -> configurable OSM-compatible tiles
   -> soft MapLibre basemap style
+  -> optional MapLibre terrain
   -> WATAreGeese campus layers
   -> existing routing engine / Dijkstra
 ```
@@ -21,13 +22,13 @@ React
 - `web/src/map-rendering/maplibre/MapLibreMapRenderer.tsx` owns the active
   MapLibre map instance and Phase 1 camera behaviour.
 - `web/src/map-rendering/maplibre/mapStyle.ts` defines the soft, low-noise
-  basemap style.
+  basemap style and optional MapLibre terrain source.
 - `web/src/map-rendering/maplibre/MapLibreMapLayers.ts` defines MapLibre campus
   building, path, route, and marker layer data.
 - `web/src/map-rendering/leaflet/LeafletMapRenderer.tsx` owns the Leaflet map
   container and tile layer for fallback use.
 - `web/src/features/map/config/mapConfig.ts` centralizes map center, zoom,
-  bounds, MapLibre camera values, tile URL, and attribution.
+  bounds, MapLibre camera values, tile URL, attribution, and terrain settings.
 
 ## Rules
 
@@ -40,7 +41,7 @@ React
 - The renderer may own camera behaviour such as the pitched initial view,
   route fit-bounds, and recentering. It must not create a second navigation
   state system.
-- No paid map token or secret API key is required for the Phase 1 basemap.
+- No paid map token or secret API key is required for the basemap or terrain.
 
 ## Building Height Data Evaluation
 
@@ -101,56 +102,49 @@ existing building outline geometry
 That metadata should remain renderer-only and must not affect Dijkstra, route
 geometry, search ranking, or direction generation.
 
-## Terrain Evaluation
+## Terrain
 
-Phase 2 also evaluated whether MapLibre terrain should be added to the campus
-map. The decision is to defer terrain.
+MapLibre terrain is enabled as an optional rendering enhancement in the active
+MapLibre renderer. It remains renderer-only: terrain does not change route
+coordinates, route computation, directions, building search, navigation state,
+or the raw campus GeoJSON.
 
-Sources investigated:
+Configured source:
 
-- Existing map configuration and renderer code.
-- Existing campus GeoJSON and route geometry.
-- Public elevation samples around the current campus experience bounds, queried
-  from Open-Elevation on 2026-09-03.
-- University of Waterloo Weather Station location information:
-  https://weather.uwaterloo.ca/info.html
-- University of Waterloo campus and elevation dataset listings:
-  https://uwaterloo.ca/lib-geospatial/collections/canadian-geospatial-data-resources/university-waterloo-campus
-  and
-  https://uwaterloo.ca/lib-geospatial/collections/canadian-geospatial-data-resources/ontario/lidar-cloud-point-and-raster-elevation-data
-- MapLibre terrain documentation:
-  https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setterrain
-  and
-  https://maplibre.org/maplibre-style-spec/sources/#raster-dem
+- Source ID: `mapzen-terrain-dem`
+- Tiles: `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png`
+- Encoding: Mapzen Terrarium `raster-dem`
+- Tile size: 256
+- Max zoom: 15
+- Attribution: `Elevation tiles © Mapzen`
+- Exaggeration: `1.15`
 
-Findings:
+MapLibre's style specification supports `raster-dem` sources using Mapzen
+Terrarium encoding, and MapLibre terrain uses that DEM source through the style
+`terrain` property. The selected Mapzen terrain tile endpoint is public and
+does not require credentials, paid access, or committed secrets.
 
-- The current WATAreGeese campus data has 2D route geometry and building
-  outline geometry. It does not include terrain elevation, per-coordinate
-  elevation, slope, stairs-as-terrain, or accessibility grade metadata.
-- Public elevation samples across the core campus experience were approximately
-  334 m to 343 m above sea level. That modest variation is unlikely to improve
-  comprehension of building-to-building indoor/outdoor routing.
-- The UW Weather Station page reports 334.4 m above sea level for a nearby
-  north-campus station, which is consistent with the sampled elevation range.
-- Authoritative UW/Geospatial Centre elevation and LiDAR datasets exist, but
-  their listed access and use restrictions are not a clean fit for direct
-  public-app integration.
-- MapLibre terrain requires an additional `raster-dem` source and DEM tile
-  network requests. The style specification supports raster DEM sources, but
-  adding one would introduce another external tile dependency, attribution
-  requirements, renderer failure cases, and extra GPU/mobile rendering cost.
-- Terrain would not change routing geometry under the project constraints, so
-  it would be a visual-only layer. On a relatively flat campus, that visual
-  complexity risks making buildings, labels, route lines, and markers harder to
-  scan.
+The terrain exaggeration is deliberately subtle. WATAreGeese is a navigation
+app, so the visual hierarchy still favors the active route, highlighted route
+segments, selected endpoints, selected buildings, campus paths, buildings, and
+labels over the basemap and terrain. Existing 3D building extrusions keep their
+uniform renderer-only heights and base height; no per-building elevation data is
+invented.
 
-Conclusion:
+Terrain failure behavior:
 
-Do not add terrain for Phase 2. The current pitched MapLibre view and restrained
-building extrusions provide useful spatial context without adding DEM tile
-requests or mobile/GPU cost. Terrain can be reconsidered later only if a
-clearly licensed DEM source and a route-relevant use case appear, such as
-meaningful slope/grade communication for accessible outdoor routing. Any future
-terrain work must preserve route geometry and degrade gracefully to the existing
-renderer fallback path.
+- MapLibre initialization/WebGL failures still go through the existing Leaflet
+  recovery path.
+- Terrain source errors are handled inside the MapLibre renderer by disabling
+  terrain and leaving the flat MapLibre experience running.
+- Route planning, route display, search, and directions continue to use the
+  same data and renderer abstraction regardless of DEM availability.
+
+Performance considerations:
+
+- Terrain adds DEM tile network requests and extra GPU work, especially on
+  mobile.
+- The source is capped at `maxzoom: 15` and uses 256 px tiles to avoid chasing
+  unnecessarily detailed DEM tiles for a campus-scale navigation view.
+- Camera behavior remains calm: terrain does not add automatic rotation,
+  flyovers, pitch changes, or route-driven camera loops.
