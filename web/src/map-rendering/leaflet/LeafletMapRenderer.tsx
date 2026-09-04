@@ -7,7 +7,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { UserPosition } from '../../features/location';
 import { Location, Route } from '../../routing/types';
-import { MapLocationSyncRequest, MapRenderer } from '../types';
+import { MapLocationSyncRequest, MapRenderer, RouteStepSelectHandler } from '../types';
 import {
 	CampusLayers,
 	LocationMarkers,
@@ -21,6 +21,7 @@ type LeafletMapRendererHostProps = {
 	hasRoute: boolean;
 	highlightedDirection: number | null;
 	userPosition: UserPosition | null;
+	onSelectRouteStep?: RouteStepSelectHandler;
 	onRendererChange: (renderer: MapRenderer | null) => void;
 };
 
@@ -28,9 +29,10 @@ export function LeafletMapRendererHost({
 	hasRoute,
 	highlightedDirection,
 	userPosition,
+	onSelectRouteStep,
 	onRendererChange
 }: LeafletMapRendererHostProps) {
-	const renderer = useLeafletMapRenderer(hasRoute, highlightedDirection, userPosition);
+	const renderer = useLeafletMapRenderer(hasRoute, highlightedDirection, userPosition, onSelectRouteStep);
 
 	useEffect(() => {
 		onRendererChange(renderer);
@@ -55,7 +57,8 @@ function resolveLocation(request: MapLocationSyncRequest): Location | null {
 export function useLeafletMapRenderer(
 	hasRoute = false,
 	highlightedDirection: number | null = null,
-	userPosition: UserPosition | null = null
+	userPosition: UserPosition | null = null,
+	onSelectRouteStep?: RouteStepSelectHandler
 ): MapRenderer {
 	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
 	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
@@ -78,7 +81,11 @@ export function useLeafletMapRenderer(
 				/>
 				<LeafletZoomControl />
 				<CampusLayers dimmed={hasRoute} />
-				<RouteLayers route={displayedRoute} highlightedDirection={highlightedDirection} />
+				<RouteLayers
+					route={displayedRoute}
+					highlightedDirection={highlightedDirection}
+					onSelectRouteStep={onSelectRouteStep}
+				/>
 				<LocationMarkers start={startMarkerLocation} end={endMarkerLocation} />
 				<UserLocationMarker position={userPosition} />
 				<UserLocationViewport target={recenterTarget} />
@@ -100,5 +107,5 @@ export function useLeafletMapRenderer(
 		recenterUserLocation: position => {
 			setRecenterTarget(position ?? userPosition);
 		}
-	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, recenterTarget, startMarkerLocation, userPosition]);
+	}), [displayedRoute, endMarkerLocation, hasRoute, highlightedDirection, onSelectRouteStep, recenterTarget, startMarkerLocation, userPosition]);
 }

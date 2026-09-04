@@ -1,4 +1,4 @@
-import { FormEvent, PointerEvent, useState, useEffect, useMemo, useRef } from 'react';
+import { FormEvent, PointerEvent, useCallback, useState, useEffect, useMemo, useRef } from 'react';
 
 import { BuildingSearchResult } from '../campus-data/buildingSearch';
 import { getStartEndLocations, getBuildingFloorOptions, OptionType } from '../map/locations';
@@ -42,7 +42,11 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const [showDirections, setShowDirections] = useState(false);
 	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
 	const sheetDragStartY = useRef<number | null>(null);
-	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection, userLocation.position);
+	const handleSelectRouteStep = useCallback((step: number) => {
+		setHighlightedDirection(step);
+		setShowDirections(true);
+	}, []);
+	const mapRenderer = useMapRenderer(hasRoute, highlightedDirection, userLocation.position, handleSelectRouteStep);
 
 	const startBuildingOption = useMemo(() => toBuildingOption(startBuilding), [startBuilding]);
 	const endBuildingOption = useMemo(() => toBuildingOption(endBuilding), [endBuilding]);

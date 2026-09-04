@@ -10,6 +10,7 @@ React
   -> configurable OSM-compatible tiles
   -> soft basemap
   -> WATAreGeese campus layers
+  -> topmost route screen overlay
 ```
 
 The active map renderer is exposed through `web/src/map-rendering`. Application
@@ -19,8 +20,8 @@ Leaflet directly.
 Tile provider configuration lives in
 `web/src/features/map/config/mapConfig.ts`. The default development provider is
 OpenStreetMap-compatible and does not require an API key or payment account.
-Phase 1 MapLibre camera settings, route camera padding, and simple building
-extrusion defaults also live in this config.
+Phase 1 MapLibre camera settings, route camera padding, terrain settings, and
+simple building extrusion defaults also live in this config.
 
 ## Navigation Flow
 
@@ -34,8 +35,11 @@ building selection
 ```
 
 MapLibre renders campus data, calculated route geometry, markers, direction
-highlighting, and Phase 1 camera movement. It does not calculate paths. Routing,
-navigation, and campus-data modules do not import MapLibre or Leaflet.
+highlighting, and Phase 1 camera movement. The active route is additionally
+projected into a topmost renderer-only SVG overlay so directions remain visible
+above pitched 3D buildings. This overlay uses the same route coordinates and
+does not calculate paths. Routing, navigation, and campus-data modules do not
+import MapLibre or Leaflet.
 
 ## Location Flow
 

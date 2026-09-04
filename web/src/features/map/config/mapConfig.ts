@@ -19,7 +19,13 @@ export const mapConfig = {
 			selectedBuildingZoom: 18,
 			userLocationZoom: 17.2,
 			animationDurationMs: 800,
-			routeBoundsPadding: 96
+			routeBoundsPadding: 96,
+			mobileRouteBoundsPadding: {
+				top: 72,
+				right: 48,
+				bottom: 360,
+				left: 48
+			}
 		},
 		buildings: {
 			extrusionBaseHeight: 0,

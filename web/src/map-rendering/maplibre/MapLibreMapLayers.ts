@@ -49,7 +49,6 @@ export const mapLibreVisualTheme = {
 	route: {
 		haloColor: '#ffffff',
 		highlightColor: '#f2a23a',
-		highlightPointColor: '#f59e0b',
 		strokeColor: '#111827',
 		bridgeColor: '#237052',
 		hallwayColor: '#456eaa',
@@ -70,6 +69,10 @@ export function campusBuildingSource(outlines: BuildingOutlineFeature[]): GeoJSO
 	};
 }
 
+export function campusBuildingExtrusionOpacity(hasRoute: boolean) {
+	return hasRoute ? 0.42 : mapLibreVisualTheme.building.extrusionOpacity;
+}
+
 export const campusBuildingExtrusionLayer: LayerSpecification = {
 	id: 'campus-building-extrusions',
 	type: 'fill-extrusion',
@@ -78,7 +81,7 @@ export const campusBuildingExtrusionLayer: LayerSpecification = {
 		'fill-extrusion-color': mapLibreVisualTheme.building.extrusionColor,
 		'fill-extrusion-base': mapConfig.maplibre.buildings.extrusionBaseHeight,
 		'fill-extrusion-height': mapConfig.maplibre.buildings.defaultExtrusionHeight,
-		'fill-extrusion-opacity': mapLibreVisualTheme.building.extrusionOpacity
+		'fill-extrusion-opacity': campusBuildingExtrusionOpacity(false)
 	}
 };
 
@@ -511,7 +514,11 @@ export const routeLayers: LayerSpecification[] = [
 		id: 'active-route-points',
 		type: 'circle',
 		source: ROUTE_SOURCE_ID,
-		filter: ['==', ['geometry-type'], 'Point'],
+		filter: [
+			'all',
+			['==', ['geometry-type'], 'Point'],
+			['!=', ['get', 'isHighlighted'], true]
+		],
 		paint: {
 			'circle-color': ['get', 'color'],
 			'circle-radius': ['get', 'radius'],
@@ -521,6 +528,24 @@ export const routeLayers: LayerSpecification[] = [
 		}
 	}
 ];
+
+export const routePointHighlightLayer: LayerSpecification = {
+	id: 'active-route-point-highlight',
+	type: 'circle',
+	source: ROUTE_SOURCE_ID,
+	filter: [
+		'all',
+		['==', ['geometry-type'], 'Point'],
+		['==', ['get', 'isHighlighted'], true]
+	],
+	paint: {
+		'circle-color': mapLibreVisualTheme.route.highlightColor,
+		'circle-radius': ['get', 'radius'],
+		'circle-opacity': 1,
+		'circle-stroke-color': mapLibreVisualTheme.route.strokeColor,
+		'circle-stroke-width': 3
+	}
+};
 
 export function routeToGeoJson(route: Route | null, highlightedDirection: number | null) {
 	return {
@@ -535,9 +560,10 @@ export function routeToGeoJson(route: Route | null, highlightedDirection: number
 				return [{
 					type: 'Feature' as const,
 					properties: {
-						color: isHighlighted ? mapLibreVisualTheme.route.highlightPointColor : routeColor(graphLocation),
+						color: isHighlighted ? mapLibreVisualTheme.route.highlightColor : routeColor(graphLocation),
 						radius: isHighlighted ? 7.2 : 5.2,
-						isHighlighted
+						isHighlighted,
+						segmentIndex: index
 					},
 					geometry: {
 						type: 'Point' as const,
@@ -549,10 +575,10 @@ export function routeToGeoJson(route: Route | null, highlightedDirection: number
 			return [{
 				type: 'Feature' as const,
 				properties: {
-					color: isHighlighted ? mapLibreVisualTheme.route.highlightPointColor : routeColor(graphLocation),
-					width: 6.2,
-					haloWidth: isHighlighted ? 13.5 : 11.5,
-					highlightWidth: 8.6,
+					color: isHighlighted ? mapLibreVisualTheme.route.highlightColor : routeColor(graphLocation),
+					width: 7.4,
+					haloWidth: isHighlighted ? 17 : 15,
+					highlightWidth: 10.5,
 					isHighlighted,
 					segmentIndex: index
 				},

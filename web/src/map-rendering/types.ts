@@ -5,6 +5,7 @@ import { Route, Location } from '../routing/types';
 import { OptionType } from '../map/locations';
 
 export type RouteDisplayCleanup = () => void;
+export type RouteStepSelectHandler = (step: number) => void;
 
 export type MapLocationSyncRequest = {
 	building: OptionType | null;

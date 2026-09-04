@@ -138,6 +138,42 @@ describe('DirectionsPanel', () => {
         expect(onClearHighlight).not.toHaveBeenCalled();
     });
 
+    it('keeps mobile direction selection when the sheet is dragged or minimized', () => {
+        const onClearHighlight = vi.fn();
+
+        render(
+            <DirectionsPanel
+                variant="mobile"
+                route={makeMultiStepRoute()}
+                selectedDirection={1}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={onClearHighlight}
+                onSelectDirection={vi.fn()}
+            />
+        );
+
+		fireEvent.pointerDown(document.body);
+
+		expect(onClearHighlight).not.toHaveBeenCalled();
+		expect(screen.getByRole('button', { name: /1take the hallway on mc floor 1hallway.*selected/i }))
+			.toHaveAttribute('aria-current', 'step');
+	});
+
+    it('keeps the mobile directions list compact so map content remains visible above the sheet', () => {
+        const { container } = render(
+            <DirectionsPanel
+                variant="mobile"
+                route={makeMultiStepRoute()}
+                selectedDirection={1}
+                onHighlightDirection={vi.fn()}
+                onClearHighlight={vi.fn()}
+                onSelectDirection={vi.fn()}
+            />
+        );
+
+        expect(container.innerHTML).toContain('max-h-[min(30svh,16rem)]');
+    });
+
     it('clears the selected direction when the selected step is clicked again', () => {
         const onClearHighlight = vi.fn();
         const onSelectDirection = vi.fn();

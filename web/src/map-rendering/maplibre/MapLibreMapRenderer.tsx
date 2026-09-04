@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { EaseToOptions, FitBoundsOptions, GeoJSONSource, LngLatBounds, Map } from 'maplibre-gl';
+import { EaseToOptions, FitBoundsOptions, GeoJSONSource, LngLatBounds, Map, MapLayerMouseEvent } from 'maplibre-gl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { getBuildingOutlines, getCampusBuildingsGeoJson, getCampusPathsGeoJson } from '../../campus-data/selectors';
@@ -9,7 +9,7 @@ import { mapConfig } from '../../features/map/config/mapConfig';
 import { UserPosition } from '../../features/location';
 import { Location, Route } from '../../routing/types';
 import { isRecoverableRendererError } from '../rendererRecovery';
-import { MapLocationSyncRequest, MapRenderer } from '../types';
+import { MapLocationSyncRequest, MapRenderer, RouteStepSelectHandler } from '../types';
 import {
 	CAMPUS_BUILDING_SOURCE_ID,
 	CAMPUS_BUILDING_LABEL_SOURCE_ID,
@@ -19,6 +19,7 @@ import {
 	ROUTE_SOURCE_ID,
 	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingExtrusionOpacity,
 	campusBuildingLabelOpacity,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
@@ -29,6 +30,7 @@ import {
 	campusPathPointOpacity,
 	campusPathSource,
 	routeLayers,
+	routePointHighlightLayer,
 	routeToGeoJson,
 	selectedBuildingLayers,
 	selectedLocationLabelLayer
@@ -39,6 +41,7 @@ type MapLibreMapRendererHostProps = {
 	hasRoute: boolean;
 	highlightedDirection: number | null;
 	userPosition: UserPosition | null;
+	onSelectRouteStep?: RouteStepSelectHandler;
 	onRendererChange: (renderer: MapRenderer | null) => void;
 	onRecoverableError?: (error: unknown) => void;
 };
@@ -47,10 +50,11 @@ export function MapLibreMapRendererHost({
 	hasRoute,
 	highlightedDirection,
 	userPosition,
+	onSelectRouteStep,
 	onRendererChange,
 	onRecoverableError
 }: MapLibreMapRendererHostProps) {
-	const renderer = useMapLibreMapRenderer(hasRoute, highlightedDirection, userPosition, onRecoverableError);
+	const renderer = useMapLibreMapRenderer(hasRoute, highlightedDirection, userPosition, onRecoverableError, onSelectRouteStep);
 
 	useEffect(() => {
 		onRendererChange(renderer);
@@ -76,14 +80,32 @@ export function useMapLibreMapRenderer(
 	hasRoute = false,
 	highlightedDirection: number | null = null,
 	userPosition: UserPosition | null = null,
-	onRecoverableError?: (error: unknown) => void
+	onRecoverableError?: (error: unknown) => void,
+	onSelectRouteStep?: RouteStepSelectHandler
 ): MapRenderer {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const mapRef = useRef<Map | null>(null);
+	const onSelectRouteStepRef = useRef(onSelectRouteStep);
 	const [isReady, setIsReady] = useState(false);
 	const [displayedRoute, setDisplayedRoute] = useState<Route | null>(null);
+	const [routeOverlay, setRouteOverlay] = useState<ProjectedRouteOverlayFeature[]>([]);
 	const [startMarkerLocation, setStartMarkerLocation] = useState<Location | null>(null);
 	const [endMarkerLocation, setEndMarkerLocation] = useState<Location | null>(null);
+	const routeVisibleRef = useRef(false);
+	const displayedRouteRef = useRef<Route | null>(null);
+	const highlightedDirectionRef = useRef<number | null>(null);
+
+	useEffect(() => {
+		onSelectRouteStepRef.current = onSelectRouteStep;
+	}, [onSelectRouteStep]);
+
+	useEffect(() => {
+		displayedRouteRef.current = displayedRoute;
+	}, [displayedRoute]);
+
+	useEffect(() => {
+		highlightedDirectionRef.current = highlightedDirection;
+	}, [highlightedDirection]);
 
 	useEffect(() => {
 		if(!containerRef.current || mapRef.current) return;
@@ -153,8 +175,12 @@ export function useMapLibreMapRenderer(
 					data: locationMarkersToGeoJson(null, null, null)
 				});
 				locationMarkerLayers.forEach(layer => map.addLayer(layer));
+				map.addLayer(routePointHighlightLayer);
+				registerRouteStepClickHandlers(map, step => onSelectRouteStepRef.current?.(step));
 				map.addLayer(campusBuildingLabelLayer);
 				map.addLayer(selectedLocationLabelLayer);
+				applyRouteVisibilityMode(map, routeVisibleRef.current);
+				setRouteOverlay(projectRouteOverlay(map, displayedRouteRef.current, highlightedDirectionRef.current));
 				setIsReady(true);
 			} catch (error) {
 				if(isRecoverableRendererError(error)) {
@@ -174,14 +200,38 @@ export function useMapLibreMapRenderer(
 
 	useEffect(() => {
 		updateRouteSource(mapRef.current, displayedRoute, highlightedDirection);
+		setRouteOverlay(projectRouteOverlay(mapRef.current, displayedRoute, highlightedDirection));
 	}, [displayedRoute, highlightedDirection]);
 
 	useEffect(() => {
-		setPaintProperty(mapRef.current, 'campus-path-line-casing', 'line-opacity', hasRoute ? 0.35 : 0.62);
-		setPaintProperty(mapRef.current, 'campus-path-lines', 'line-opacity', campusPathLineOpacity(hasRoute));
-		setPaintProperty(mapRef.current, 'campus-path-points', 'circle-opacity', campusPathPointOpacity(hasRoute));
-		setPaintProperty(mapRef.current, 'campus-building-labels', 'text-opacity', campusBuildingLabelOpacity(hasRoute));
-	}, [hasRoute]);
+		const map = mapRef.current;
+		if(!map) return;
+
+		const updateOverlay = () => {
+			setRouteOverlay(projectRouteOverlay(map, displayedRoute, highlightedDirection));
+		};
+
+		map.on('move', updateOverlay);
+		map.on('zoom', updateOverlay);
+		map.on('pitch', updateOverlay);
+		map.on('rotate', updateOverlay);
+		map.on('resize', updateOverlay);
+		updateOverlay();
+
+		return () => {
+			map.off('move', updateOverlay);
+			map.off('zoom', updateOverlay);
+			map.off('pitch', updateOverlay);
+			map.off('rotate', updateOverlay);
+			map.off('resize', updateOverlay);
+		};
+	}, [displayedRoute, highlightedDirection, isReady]);
+
+	useEffect(() => {
+		const routeVisible = hasRoute || displayedRoute != null;
+		routeVisibleRef.current = routeVisible;
+		applyRouteVisibilityMode(mapRef.current, routeVisible);
+	}, [displayedRoute, hasRoute]);
 
 	useEffect(() => {
 		updateLocationLabelSource(mapRef.current, startMarkerLocation, endMarkerLocation);
@@ -189,7 +239,12 @@ export function useMapLibreMapRenderer(
 	}, [startMarkerLocation, endMarkerLocation, userPosition]);
 
 	return useMemo(() => ({
-		mapElement: <div ref={containerRef} className="h-full w-full" />,
+		mapElement: (
+			<div className="relative h-full w-full">
+				<div ref={containerRef} className="h-full w-full" />
+				<RouteScreenOverlay features={routeOverlay} />
+			</div>
+		),
 		isReady,
 		canRenderDirections: true,
 		syncStartLocation: resolveLocation,
@@ -202,9 +257,16 @@ export function useMapLibreMapRenderer(
 			setEndMarkerLocation(end);
 		},
 		displayRoute: route => {
+			const routeVisible = route != null;
+			routeVisibleRef.current = routeVisible;
+			applyRouteVisibilityMode(mapRef.current, routeVisible);
 			setDisplayedRoute(route);
 			fitRouteBounds(mapRef.current, route);
-			return () => setDisplayedRoute(null);
+			return () => {
+				routeVisibleRef.current = false;
+				applyRouteVisibilityMode(mapRef.current, false);
+				setDisplayedRoute(null);
+			};
 		},
 		recenterUserLocation: position => {
 			const target = position ?? userPosition;
@@ -212,7 +274,102 @@ export function useMapLibreMapRenderer(
 
 			mapRef.current?.easeTo(userLocationCameraOptions(target));
 		}
-	}), [isReady, userPosition]);
+	}), [isReady, routeOverlay, userPosition]);
+}
+
+type ProjectedRouteOverlayFeature = {
+	kind: 'line' | 'point';
+	color: string;
+	isHighlighted: boolean;
+	points: [number, number][];
+};
+
+function RouteScreenOverlay({ features }: { features: ProjectedRouteOverlayFeature[] }) {
+	if(features.length == 0) return null;
+
+	return (
+		<svg
+			className="pointer-events-none absolute inset-0 z-[5] h-full w-full"
+			aria-hidden="true"
+		>
+			{features.map((feature, index) => feature.kind == 'line' ? (
+				<g key={index}>
+					<polyline
+						points={svgPoints(feature.points)}
+						fill="none"
+						stroke="#ffffff"
+						strokeWidth={feature.isHighlighted ? 18 : 16}
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						opacity={0.95}
+					/>
+					<polyline
+						points={svgPoints(feature.points)}
+						fill="none"
+						stroke={feature.color}
+						strokeWidth={feature.isHighlighted ? 10 : 8}
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+				</g>
+			) : (
+				<g key={index}>
+					<circle
+						cx={feature.points[0][0]}
+						cy={feature.points[0][1]}
+						r={feature.isHighlighted ? 10 : 8}
+						fill="#ffffff"
+						opacity={0.95}
+					/>
+					<circle
+						cx={feature.points[0][0]}
+						cy={feature.points[0][1]}
+						r={feature.isHighlighted ? 6 : 4.8}
+						fill={feature.color}
+						stroke="#111827"
+						strokeWidth={feature.isHighlighted ? 2.5 : 2}
+					/>
+				</g>
+			))}
+		</svg>
+	);
+}
+
+function svgPoints(points: [number, number][]) {
+	return points.map(point => point.join(',')).join(' ');
+}
+
+export function projectRouteOverlay(
+	map: Pick<Map, 'project'> | null,
+	route: Route | null,
+	highlightedDirection: number | null
+): ProjectedRouteOverlayFeature[] {
+	if(!map || !route) return [];
+
+	return routeToGeoJson(route, highlightedDirection).features.flatMap(feature => {
+		const isHighlighted = Boolean(feature.properties.isHighlighted);
+		const color = String(feature.properties.color);
+
+		if(feature.geometry.type == 'LineString') {
+			return [{
+				kind: 'line' as const,
+				color,
+				isHighlighted,
+				points: feature.geometry.coordinates.map(coordinate => {
+					const point = map.project(coordinate);
+					return [point.x, point.y] as [number, number];
+				})
+			}];
+		}
+
+		const point = map.project(feature.geometry.coordinates);
+		return [{
+			kind: 'point' as const,
+			color,
+			isHighlighted,
+			points: [[point.x, point.y] as [number, number]]
+		}];
+	});
 }
 
 export function isTerrainSourceError(event: { sourceId?: string; error?: unknown }, terrainSourceId: string) {
@@ -225,6 +382,49 @@ function disableTerrain(map: Map) {
 	} catch {
 		// Terrain is optional. If disabling it fails, keep the renderer running flat.
 	}
+}
+
+function applyRouteVisibilityMode(map: Map | null, routeVisible: boolean) {
+	setPaintProperty(map, 'campus-building-extrusions', 'fill-extrusion-opacity', campusBuildingExtrusionOpacity(routeVisible));
+	setPaintProperty(map, 'campus-path-line-casing', 'line-opacity', routeVisible ? 0.35 : 0.62);
+	setPaintProperty(map, 'campus-path-lines', 'line-opacity', campusPathLineOpacity(routeVisible));
+	setPaintProperty(map, 'campus-path-points', 'circle-opacity', campusPathPointOpacity(routeVisible));
+	setPaintProperty(map, 'campus-building-labels', 'text-opacity', campusBuildingLabelOpacity(routeVisible));
+}
+
+const selectableRouteLayerIds = [
+	'active-route-line-core',
+	'active-route-line-highlight',
+	'active-route-points',
+	'active-route-point-highlight'
+];
+
+function registerRouteStepClickHandlers(map: Map, onSelectRouteStep: RouteStepSelectHandler) {
+	const handleRouteClick = (event: MapLayerMouseEvent) => {
+		const segmentIndex = routeStepFromEvent(event);
+		if(segmentIndex == null) return;
+		onSelectRouteStep(segmentIndex);
+	};
+
+	selectableRouteLayerIds.forEach(layerId => {
+		map.on('click', layerId, handleRouteClick);
+		map.on('mouseenter', layerId, () => {
+			map.getCanvas().style.cursor = 'pointer';
+		});
+		map.on('mouseleave', layerId, () => {
+			map.getCanvas().style.cursor = '';
+		});
+	});
+}
+
+export function routeStepFromEvent(event: Pick<MapLayerMouseEvent, 'features'>) {
+	const segmentIndex = event.features?.[0]?.properties?.segmentIndex;
+	if(typeof segmentIndex == 'number') return segmentIndex;
+	if(typeof segmentIndex == 'string') {
+		const parsedIndex = Number(segmentIndex);
+		return Number.isFinite(parsedIndex) ? parsedIndex : null;
+	}
+	return null;
 }
 
 function flyToSelectedBuilding(map: Map | null, location: Location | null) {
@@ -258,12 +458,20 @@ export function selectedBuildingCameraOptions(location: Location): EaseToOptions
 
 export function routeBoundsCameraOptions(): FitBoundsOptions {
 	return {
-		padding: mapConfig.maplibre.camera.routeBoundsPadding,
+		padding: routeBoundsPadding(),
 		maxZoom: mapConfig.maplibre.camera.routeZoom,
 		pitch: mapConfig.maplibre.camera.defaultPitch,
 		bearing: mapConfig.maplibre.camera.defaultBearing,
 		duration: motionDuration()
 	};
+}
+
+export function routeBoundsPadding() {
+	if(typeof window == 'undefined') return mapConfig.maplibre.camera.routeBoundsPadding;
+	if(!window.matchMedia) return mapConfig.maplibre.camera.routeBoundsPadding;
+	return window.matchMedia('(max-width: 1023px)').matches
+		? mapConfig.maplibre.camera.mobileRouteBoundsPadding
+		: mapConfig.maplibre.camera.routeBoundsPadding;
 }
 
 export function userLocationCameraOptions(position: UserPosition): EaseToOptions {

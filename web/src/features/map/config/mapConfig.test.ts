@@ -24,6 +24,9 @@ describe('mapConfig', () => {
 		expect(mapConfig.maplibre.camera.routeZoom).toBeGreaterThan(mapConfig.maplibre.camera.defaultZoom);
 		expect(mapConfig.maplibre.camera.selectedBuildingZoom).toBeGreaterThan(mapConfig.maplibre.camera.routeZoom);
 		expect(mapConfig.maplibre.camera.routeBoundsPadding).toBeGreaterThan(0);
+		expect(mapConfig.maplibre.camera.mobileRouteBoundsPadding.bottom).toBeGreaterThan(
+			mapConfig.maplibre.camera.mobileRouteBoundsPadding.top
+		);
 		expect(mapConfig.maplibre.camera.animationDurationMs).toBeGreaterThan(0);
 	});
 

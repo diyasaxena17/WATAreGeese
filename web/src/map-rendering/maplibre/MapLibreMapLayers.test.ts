@@ -12,6 +12,7 @@ import {
 	ROUTE_SOURCE_ID,
 	SELECTED_BUILDING_SOURCE_ID,
 	campusBuildingExtrusionLayer,
+	campusBuildingExtrusionOpacity,
 	campusBuildingLabelOpacity,
 	campusBuildingLabelLayer,
 	campusBuildingLabelSource,
@@ -22,6 +23,7 @@ import {
 	campusPathLayers,
 	mapLibreVisualTheme,
 	routeLayers,
+	routePointHighlightLayer,
 	routeToGeoJson,
 	selectedBuildingLayers,
 	selectedLocationLabelLayer
@@ -51,6 +53,14 @@ describe('MapLibre campus building layers', () => {
 				'fill-extrusion-opacity': mapLibreVisualTheme.building.extrusionOpacity
 			}
 		});
+	});
+
+	it('fades building extrusions while directions are active without flattening the 3D context', () => {
+		expect(campusBuildingExtrusionOpacity(false)).toBe(mapLibreVisualTheme.building.extrusionOpacity);
+		expect(campusBuildingExtrusionOpacity(true)).toBeLessThan(campusBuildingExtrusionOpacity(false));
+		expect(campusBuildingExtrusionOpacity(true)).toBeGreaterThan(0.35);
+		expect(campusBuildingExtrusionLayer.paint?.['fill-extrusion-height'])
+			.toBe(mapConfig.maplibre.buildings.defaultExtrusionHeight);
 	});
 
 	it('uses existing building point data for campus labels', () => {
@@ -205,6 +215,36 @@ describe('MapLibre route layers', () => {
 			'active-route-points'
 		]);
 		expect(routeLayers.every(layer => layer.source == ROUTE_SOURCE_ID)).toBe(true);
+		expect(routePointHighlightLayer).toMatchObject({
+			id: 'active-route-point-highlight',
+			type: 'circle',
+			source: ROUTE_SOURCE_ID,
+			filter: [
+				'all',
+				['==', ['geometry-type'], 'Point'],
+				['==', ['get', 'isHighlighted'], true]
+			],
+			paint: {
+				'circle-color': mapLibreVisualTheme.route.highlightColor
+			}
+		});
+	});
+
+	it('uses wide route strokes and halos so directions remain visible over 3D buildings', () => {
+		const route = {
+			graphLocations: [
+				{ path: [[-80, 43]], travelMode: null },
+				{ path: [[-80.1, 43.1], [-80.2, 43.2]], travelMode: CAMPUS_FEATURE_TYPES.WALKWAY },
+				{ path: [[-80.2, 43.2], [-80.3, 43.3]], travelMode: CAMPUS_FEATURE_TYPES.BRIDGE }
+			]
+		};
+
+		const geoJson = routeToGeoJson(route as never, 2);
+
+		expect(geoJson.features[0].properties.width).toBeGreaterThanOrEqual(7);
+		expect(geoJson.features[0].properties.haloWidth).toBeGreaterThanOrEqual(15);
+		expect(geoJson.features[1].properties.highlightWidth).toBeGreaterThanOrEqual(10);
+		expect(geoJson.features[1].properties.haloWidth).toBeGreaterThan(geoJson.features[0].properties.haloWidth);
 	});
 
 	it('maps highlighted route state without changing route coordinates', () => {
@@ -226,5 +266,23 @@ describe('MapLibre route layers', () => {
 		expect(geoJson.features[1].geometry.coordinates).toBe(highlightedPath);
 		expect(geoJson.features[1].properties.isHighlighted).toBe(true);
 		expect(geoJson.features[1].properties.segmentIndex).toBe(2);
+	});
+
+	it('uses the same highlight colour for point-only selected steps as highlighted line steps', () => {
+		const endpointPath = [[-80.1, 43.1]] as [number, number][];
+		const route = {
+			graphLocations: [
+				{ path: [[-80, 43]], travelMode: null },
+				{ path: endpointPath, travelMode: CAMPUS_FEATURE_TYPES.WALKWAY }
+			]
+		};
+
+		const geoJson = routeToGeoJson(route as never, 1);
+
+		expect(geoJson.features).toHaveLength(1);
+		expect(geoJson.features[0].geometry.coordinates).toEqual(endpointPath[0]);
+		expect(geoJson.features[0].properties.isHighlighted).toBe(true);
+		expect(geoJson.features[0].properties.segmentIndex).toBe(1);
+		expect(geoJson.features[0].properties.color).toBe(mapLibreVisualTheme.route.highlightColor);
 	});
 });

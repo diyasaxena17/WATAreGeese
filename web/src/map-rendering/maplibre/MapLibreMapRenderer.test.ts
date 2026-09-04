@@ -4,11 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { mapConfig } from '../../features/map/config/mapConfig';
 import { BuildingFloor, Coordinate, Location } from '../../routing/types';
+import { mapLibreVisualTheme } from './MapLibreMapLayers';
 import {
 	locationMarkersToGeoJson,
 	motionDuration,
 	isTerrainSourceError,
+	projectRouteOverlay,
+	routeStepFromEvent,
 	routeBoundsCameraOptions,
+	routeBoundsPadding,
 	selectedBuildingToGeoJson,
 	selectedBuildingCameraOptions,
 	userLocationCameraOptions
@@ -45,6 +49,16 @@ describe('MapLibre camera intents', () => {
 		});
 	});
 
+	it('uses extra bottom route padding on mobile so the directions sheet does not cover the route', () => {
+		vi.stubGlobal('window', {
+			matchMedia: vi.fn().mockReturnValue({ matches: true })
+		});
+
+		expect(routeBoundsPadding()).toEqual(mapConfig.maplibre.camera.mobileRouteBoundsPadding);
+		expect(mapConfig.maplibre.camera.mobileRouteBoundsPadding.bottom)
+			.toBeGreaterThan(mapConfig.maplibre.camera.mobileRouteBoundsPadding.top);
+	});
+
 	it('recenters user location smoothly without changing heading', () => {
 		expect(userLocationCameraOptions({
 			coordinates: {
@@ -72,7 +86,7 @@ describe('MapLibre camera intents', () => {
 		const source = readFileSync(resolve(__dirname, 'MapLibreMapRenderer.tsx'), 'utf8');
 		const routeSourceEffect = source.slice(
 			source.indexOf('useEffect(() => {\n\t\tupdateRouteSource'),
-			source.indexOf('useEffect(() => {\n\t\tsetPaintProperty')
+			source.indexOf('useEffect(() => {\n\t\tupdateLocationLabelSource')
 		);
 		const displayRouteBlock = source.slice(
 			source.indexOf('displayRoute: route =>'),
@@ -80,9 +94,48 @@ describe('MapLibre camera intents', () => {
 		);
 
 		expect(displayRouteBlock).toContain('fitRouteBounds(mapRef.current, route)');
+		expect(displayRouteBlock).toContain('routeVisibleRef.current = routeVisible');
+		expect(displayRouteBlock).toContain('applyRouteVisibilityMode(mapRef.current, routeVisible)');
 		expect(routeSourceEffect).toContain('[displayedRoute, highlightedDirection]');
 		expect(routeSourceEffect).not.toContain('fitRouteBounds');
 		expect(routeSourceEffect).not.toContain('easeTo');
+	});
+
+	it('keeps route visibility mode synchronized with route state and map load', () => {
+		const source = readFileSync(resolve(__dirname, 'MapLibreMapRenderer.tsx'), 'utf8');
+
+		expect(source).toContain('<RouteScreenOverlay features={routeOverlay} />');
+		expect(source).toContain('setRouteOverlay(projectRouteOverlay(mapRef.current, displayedRoute, highlightedDirection))');
+		expect(source).toContain('applyRouteVisibilityMode(map, routeVisibleRef.current)');
+		expect(source).toContain('const routeVisible = hasRoute || displayedRoute != null');
+		expect(source).toContain('applyRouteVisibilityMode(mapRef.current, false)');
+		expect(source).toContain("'fill-extrusion-opacity', campusBuildingExtrusionOpacity(routeVisible)");
+	});
+
+	it('projects the active route into a topmost screen overlay without changing coordinates', () => {
+		const route = {
+			graphLocations: [
+				{ path: [[-80, 43]], travelMode: null },
+				{ path: [[-80.1, 43.1], [-80.2, 43.2]], travelMode: null }
+			]
+		};
+		const map = {
+			project: vi.fn(([lng, lat]: [number, number]) => ({ x: lng + 100, y: lat + 200 }))
+		};
+
+		const overlay = projectRouteOverlay(map, route as never, 1);
+
+		expect(map.project).toHaveBeenCalledWith([-80.1, 43.1]);
+		expect(map.project).toHaveBeenCalledWith([-80.2, 43.2]);
+		expect(overlay[0]).toMatchObject({
+			kind: 'line',
+			color: mapLibreVisualTheme.route.highlightColor,
+			isHighlighted: true
+		});
+		expect(overlay[0].points[0][0]).toBeCloseTo(19.9);
+		expect(overlay[0].points[0][1]).toBeCloseTo(243.1);
+		expect(overlay[0].points[1][0]).toBeCloseTo(19.8);
+		expect(overlay[0].points[1][1]).toBeCloseTo(243.2);
 	});
 
 	it('maps start, destination, and user position into distinguishable marker features', () => {
@@ -123,6 +176,19 @@ describe('MapLibre camera intents', () => {
 			feature.properties.default.buildingCode == 'DC'
 		)).toBe(true);
 	});
+
+	it('maps clicked route features back to direction step indices', () => {
+		expect(routeStepFromEvent({
+			features: [{ properties: { segmentIndex: 2 } }]
+		} as never)).toBe(2);
+		expect(routeStepFromEvent({
+			features: [{ properties: { segmentIndex: '3' } }]
+		} as never)).toBe(3);
+		expect(routeStepFromEvent({
+			features: [{ properties: { segmentIndex: 'not-a-step' } }]
+		} as never)).toBeNull();
+	});
+
 	it('keeps terrain source errors inside the MapLibre renderer boundary', () => {
 		expect(isTerrainSourceError({
 			sourceId: mapConfig.maplibre.terrain.sourceId,

@@ -4,7 +4,7 @@ import { Component, lazy, ReactNode, Suspense, useCallback, useMemo, useRef, use
 import { UserPosition } from '../features/location';
 import { Location, Route } from '../routing/types';
 import { isRecoverableRendererError } from './rendererRecovery';
-import { MapLocationSyncRequest, MapRenderer, RouteDisplayCleanup } from './types';
+import { MapLocationSyncRequest, MapRenderer, RouteDisplayCleanup, RouteStepSelectHandler } from './types';
 
 const MapLibreMapRendererHost = lazy(() =>
 	import('./maplibre/MapLibreMapRenderer').then(module => ({
@@ -23,7 +23,8 @@ const noopCleanup: RouteDisplayCleanup = () => {};
 export function useLazyMapRenderer(
 	hasRoute = false,
 	highlightedDirection: number | null = null,
-	userPosition: UserPosition | null = null
+	userPosition: UserPosition | null = null,
+	onSelectRouteStep?: RouteStepSelectHandler
 ): MapRenderer {
 	const rendererRef = useRef<MapRenderer | null>(null);
 	const [isReady, setIsReady] = useState(false);
@@ -48,6 +49,7 @@ export function useLazyMapRenderer(
 						hasRoute={hasRoute}
 						highlightedDirection={highlightedDirection}
 						userPosition={userPosition}
+						onSelectRouteStep={onSelectRouteStep}
 						onRendererChange={setRenderer}
 					/>
 					<RendererFallbackNotice />
@@ -60,6 +62,7 @@ export function useLazyMapRenderer(
 						hasRoute={hasRoute}
 						highlightedDirection={highlightedDirection}
 						userPosition={userPosition}
+						onSelectRouteStep={onSelectRouteStep}
 						onRendererChange={setRenderer}
 						onRecoverableError={recoverToFallback}
 					/>
@@ -83,7 +86,7 @@ export function useLazyMapRenderer(
 		recenterUserLocation: (position?: UserPosition | null) => {
 			rendererRef.current?.recenterUserLocation(position);
 		}
-	}), [fallbackReason, hasRoute, highlightedDirection, isReady, recoverToFallback, setRenderer, userPosition]);
+	}), [fallbackReason, hasRoute, highlightedDirection, isReady, onSelectRouteStep, recoverToFallback, setRenderer, userPosition]);
 }
 
 type RendererRecoveryBoundaryProps = {

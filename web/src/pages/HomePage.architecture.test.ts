@@ -17,7 +17,7 @@ describe('HomePage routing boundary', () => {
 		const source = readFileSync(resolve(__dirname, 'HomePage.tsx'), 'utf8');
 
 		expect(source).toContain("import { useMapRenderer } from '../map-rendering'");
-		expect(source).toContain('useMapRenderer(hasRoute, highlightedDirection, userLocation.position)');
+		expect(source).toContain('useMapRenderer(hasRoute, highlightedDirection, userLocation.position, handleSelectRouteStep)');
 		expect(source).not.toContain('google.maps');
 		expect(source).not.toContain('useLoadMap');
 		expect(source).not.toContain('useGoogleMapsLibrary');

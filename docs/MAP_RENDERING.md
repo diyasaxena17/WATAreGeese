@@ -12,6 +12,7 @@ React
   -> soft MapLibre basemap style
   -> optional MapLibre terrain
   -> WATAreGeese campus layers
+  -> topmost route screen overlay
   -> existing routing engine / Dijkstra
 ```
 
@@ -20,11 +21,13 @@ React
 - `web/src/map-rendering/index.ts` exports the active `useMapRenderer()`
   boundary.
 - `web/src/map-rendering/maplibre/MapLibreMapRenderer.tsx` owns the active
-  MapLibre map instance and Phase 1 camera behaviour.
+  MapLibre map instance, Phase 1 camera behaviour, and topmost route screen
+  overlay.
 - `web/src/map-rendering/maplibre/mapStyle.ts` defines the soft, low-noise
   basemap style and optional MapLibre terrain source.
 - `web/src/map-rendering/maplibre/MapLibreMapLayers.ts` defines MapLibre campus
-  building, path, route, and marker layer data.
+  building, path, route, and marker layer data. Route layer data is also reused
+  by the screen overlay projection.
 - `web/src/map-rendering/leaflet/LeafletMapRenderer.tsx` owns the Leaflet map
   container and tile layer for fallback use.
 - `web/src/features/map/config/mapConfig.ts` centralizes map center, zoom,
@@ -38,10 +41,33 @@ React
 - Tile URLs and attribution must come from `mapConfig`.
 - MapLibre renders existing campus GeoJSON and `RouteResult` geometry; it must
   not calculate paths.
+- The route screen overlay must use the same renderer route geometry. It must
+  not create alternate route coordinates or route decisions.
 - The renderer may own camera behaviour such as the pitched initial view,
   route fit-bounds, and recentering. It must not create a second navigation
   state system.
 - No paid map token or secret API key is required for the basemap or terrain.
+
+## Visual Hierarchy
+
+The active route is the top visual priority. MapLibre's normal route line
+layers remain in the style for map interaction and renderer parity, but the
+visible navigation path is also projected into an SVG screen overlay above the
+MapLibre canvas. This keeps the route readable even when pitched 3D building
+extrusions would otherwise occlude ground-level line layers.
+
+The overlay is renderer-only:
+
+- It calls `map.project(...)` on the existing route coordinates.
+- It updates on map move, zoom, pitch, rotate, resize, route changes, and
+  highlighted direction changes.
+- It does not change Dijkstra, route geometry, direction text, building search,
+  raw GeoJSON, or navigation state.
+- It is `pointer-events: none`, so MapLibre layers still own map interaction.
+
+When a route is active, building extrusions are slightly faded to keep campus
+context visible without competing with the route. Buildings remain 3D; the
+route wins because it is painted above the WebGL scene.
 
 ## Building Height Data Evaluation
 
