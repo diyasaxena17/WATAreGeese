@@ -19,15 +19,21 @@ vi.mock('../map-rendering', () => ({
 }));
 
 describe('HomePage mobile sheet', () => {
-	it('can be dragged down and restored', async () => {
+	it('supports medium, minimized, and restored detents', async () => {
 		const user = userEvent.setup();
-		render(<HomePage />);
+		const { container } = render(<HomePage />);
 
 		expect(screen.getAllByRole('button', { name: /fromchoose starting point/i })).toHaveLength(2);
 
-		const handle = screen.getByRole('button', { name: /drag route planner down to minimize/i });
+		const handle = screen.getByRole('button', { name: /drag route planner to resize/i });
 		fireEvent.pointerDown(handle, { clientY: 100, pointerId: 1 });
 		fireEvent.pointerUp(handle, { clientY: 220, pointerId: 1 });
+
+		expect(container.querySelector('.h-\\[58svh\\]')).toBeInTheDocument();
+		expect(screen.getAllByRole('button', { name: /fromchoose starting point/i })).toHaveLength(2);
+
+		fireEvent.pointerDown(handle, { clientY: 100, pointerId: 2 });
+		fireEvent.pointerUp(handle, { clientY: 220, pointerId: 2 });
 
 		expect(screen.getAllByRole('button', { name: /fromchoose starting point/i })).toHaveLength(1);
 		expect(screen.getByRole('button', { name: /plan route/i })).toBeInTheDocument();
@@ -35,5 +41,18 @@ describe('HomePage mobile sheet', () => {
 		await user.click(screen.getByRole('button', { name: /plan route/i }));
 
 		expect(screen.getAllByRole('button', { name: /fromchoose starting point/i })).toHaveLength(2);
+	});
+
+	it('can be expanded from the medium detent', () => {
+		const { container } = render(<HomePage />);
+		const handle = screen.getByRole('button', { name: /drag route planner to resize/i });
+
+		fireEvent.pointerDown(handle, { clientY: 100, pointerId: 1 });
+		fireEvent.pointerUp(handle, { clientY: 220, pointerId: 1 });
+		expect(container.querySelector('.h-\\[58svh\\]')).toBeInTheDocument();
+
+		fireEvent.pointerDown(handle, { clientY: 220, pointerId: 2 });
+		fireEvent.pointerUp(handle, { clientY: 100, pointerId: 2 });
+		expect(container.querySelector('.h-\\[88svh\\]')).toBeInTheDocument();
 	});
 });

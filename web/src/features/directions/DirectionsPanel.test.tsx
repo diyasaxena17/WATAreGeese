@@ -159,7 +159,7 @@ describe('DirectionsPanel', () => {
 			.toHaveAttribute('aria-current', 'step');
 	});
 
-    it('keeps the mobile directions list compact so map content remains visible above the sheet', () => {
+	it('lets the mobile sheet own scrolling so every direction remains reachable at medium height', () => {
         const { container } = render(
             <DirectionsPanel
                 variant="mobile"
@@ -171,7 +171,8 @@ describe('DirectionsPanel', () => {
             />
         );
 
-        expect(container.innerHTML).toContain('max-h-[min(30svh,16rem)]');
+		expect(container.innerHTML).toContain('overflow-visible');
+		expect(container.innerHTML).not.toContain('max-h-[min(30svh,16rem)]');
     });
 
     it('clears the selected direction when the selected step is clicked again', () => {

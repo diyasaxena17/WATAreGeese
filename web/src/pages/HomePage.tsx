@@ -21,6 +21,8 @@ export type HomePageProps = {
 	locationService?: LocationService;
 };
 
+type MobileSheetDetent = 'expanded' | 'medium' | 'minimized';
+
 export default function HomePage({ locationService }: HomePageProps = {}) {
 	const navigationService = useMemo(() => new NavigationService(), []);
 	const userLocation = useUserLocation(locationService);
@@ -40,7 +42,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
-	const [isMobileSheetMinimized, setIsMobileSheetMinimized] = useState(false);
+	const [mobileSheetDetent, setMobileSheetDetent] = useState<MobileSheetDetent>('expanded');
 	const sheetDragStartY = useRef<number | null>(null);
 	const handleSelectRouteStep = useCallback((step: number) => {
 		setHighlightedDirection(step);
@@ -106,6 +108,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 			setHasRoute(true);
 			setShowDirections(true);
 			setShowInput(false);
+			setMobileSheetDetent('medium');
 			setHighlightedDirection(null);
 		}
 	};
@@ -175,6 +178,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const showRouteForm = () => {
 		setShowInput(true);
 		setShowDirections(false);
+		setMobileSheetDetent('expanded');
 		setHighlightedDirection(null);
 	};
 
@@ -198,8 +202,14 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	};
 
 	const handleSheetDragEnd = (event: PointerEvent<HTMLButtonElement>) => {
-		if(sheetDragStartY.current != null && event.clientY - sheetDragStartY.current > 80) {
-			setIsMobileSheetMinimized(true);
+		if(sheetDragStartY.current != null) {
+			const dragDistance = event.clientY - sheetDragStartY.current;
+			if(dragDistance > 160) setMobileSheetDetent('minimized');
+			else if(dragDistance > 80) {
+				setMobileSheetDetent(current => current == 'expanded' ? 'medium' : 'minimized');
+			} else if(dragDistance < -80) {
+				setMobileSheetDetent('expanded');
+			}
 		}
 		sheetDragStartY.current = null;
 	};
@@ -273,20 +283,20 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 					</div>
 				</Panel>
 			}
-			sheet={isMobileSheetMinimized ? (
+			sheet={mobileSheetDetent == 'minimized' ? (
 				<div className="rounded-panel border border-border bg-surface p-2 shadow-panel">
 					<Button
 						variant="secondary"
 						className="w-full justify-between"
-						onClick={() => setIsMobileSheetMinimized(false)}
+						onClick={() => setMobileSheetDetent(hasRoute ? 'medium' : 'expanded')}
 					>
 						{startBuilding && endBuilding ? `${startBuilding.buildingCode} to ${endBuilding.buildingCode}` : 'Plan route'}
 					</Button>
 				</div>
 			) : (
 				<Sheet
-					className="wg-routing-panel-pattern"
-					handleLabel="Drag route planner down to minimize"
+					className={`wg-routing-panel-pattern transition-[height] duration-200 ${mobileSheetDetent == 'medium' ? 'h-[58svh]' : 'h-[88svh]'}`}
+					handleLabel="Drag route planner to resize"
 					onHandlePointerDown={handleSheetDragStart}
 					onHandlePointerUp={handleSheetDragEnd}
 					onHandlePointerCancel={() => {

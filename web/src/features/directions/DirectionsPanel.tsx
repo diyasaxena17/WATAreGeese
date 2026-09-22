@@ -42,10 +42,10 @@ export default function DirectionsPanel({
                             <h2 className="text-wg-section-title">Directions</h2>
                             <div
                                 className={cx(
-                                    'overflow-y-auto pr-1',
+                                    'pr-1',
                                     variant == 'mobile'
-                                        ? 'max-h-[min(30svh,16rem)]'
-                                        : 'max-h-[min(52svh,32rem)]'
+                                        ? 'overflow-visible'
+                                        : 'max-h-[min(52svh,32rem)] overflow-y-auto'
                                 )}
                             >
                                 <DirectionsList
