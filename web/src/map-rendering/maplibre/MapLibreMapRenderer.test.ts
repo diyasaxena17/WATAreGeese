@@ -36,7 +36,7 @@ describe('MapLibre camera intents', () => {
 			bearing: mapConfig.maplibre.camera.defaultBearing,
 			duration: mapConfig.maplibre.camera.animationDurationMs
 		});
-		expect(mapConfig.maplibre.camera.selectedBuildingZoom).toBeLessThanOrEqual(18);
+		expect(mapConfig.maplibre.camera.selectedBuildingZoom).toBeLessThanOrEqual(17);
 	});
 
 	it('frames active routes with configured pitch, bearing, zoom, and padding', () => {

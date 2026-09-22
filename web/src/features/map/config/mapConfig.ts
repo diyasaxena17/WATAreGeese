@@ -16,7 +16,7 @@ export const mapConfig = {
 			maxPitch: 62,
 			defaultZoom: 16.2,
 			routeZoom: 16.8,
-			selectedBuildingZoom: 18,
+			selectedBuildingZoom: 17,
 			userLocationZoom: 17.2,
 			animationDurationMs: 800,
 			routeBoundsPadding: 96,
