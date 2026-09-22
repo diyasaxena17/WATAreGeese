@@ -96,7 +96,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		if (mapRenderer.isReady && startLocation && endLocation) {
+		if (startLocation && endLocation) {
 			console.log(`Start: ${startLocation.toString()}, End: ${endLocation.toString()}`);
 			setRoute(navigationService.calculateRoute({
 				start: startLocation,

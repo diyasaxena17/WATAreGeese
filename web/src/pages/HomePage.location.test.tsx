@@ -4,24 +4,30 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LocationError } from '../features/location';
 import { LocationService, UserPosition } from '../features/location/types';
+import { getStartEndLocations } from '../map/locations';
+import { MapLocationSyncRequest } from '../map-rendering';
 import HomePage from './HomePage';
 
 const recenterUserLocation = vi.fn();
-const syncStartLocation = vi.fn(() => null);
-const syncEndLocation = vi.fn(() => null);
+const syncStartLocation = vi.fn((_request?: MapLocationSyncRequest) => null);
+const syncEndLocation = vi.fn((_request?: MapLocationSyncRequest) => null);
+let mapRendererReady = true;
+const mockMapRenderer = {
+	mapElement: <div>Map area</div>,
+	get isReady() {
+		return mapRendererReady;
+	},
+	canRenderDirections: false,
+	syncStartLocation,
+	syncEndLocation,
+	focusLocation: vi.fn(),
+	setLocationMarkers: vi.fn(),
+	displayRoute: vi.fn(() => () => {}),
+	recenterUserLocation
+};
 
 vi.mock('../map-rendering', () => ({
-	useMapRenderer: () => ({
-		mapElement: <div>Map area</div>,
-		isReady: true,
-		canRenderDirections: false,
-		syncStartLocation,
-		syncEndLocation,
-		focusLocation: vi.fn(),
-		setLocationMarkers: vi.fn(),
-		displayRoute: vi.fn(() => () => {}),
-		recenterUserLocation
-	})
+	useMapRenderer: () => mockMapRenderer
 }));
 
 const position: UserPosition = {
@@ -52,6 +58,9 @@ describe('HomePage current location UX', () => {
 		recenterUserLocation.mockClear();
 		syncStartLocation.mockClear();
 		syncEndLocation.mockClear();
+		syncStartLocation.mockReturnValue(null);
+		syncEndLocation.mockReturnValue(null);
+		mapRendererReady = true;
 	});
 
 	it('does not request location on page load and exposes an accessible control', () => {
@@ -139,5 +148,31 @@ describe('HomePage current location UX', () => {
 			building: expect.objectContaining({ value: 'DC' }),
 			floor: expect.objectContaining({ value: '2' })
 		}));
+	});
+
+	it('calculates a route while the map renderer readiness signal is stale', async () => {
+		const user = userEvent.setup();
+		const locations = getStartEndLocations();
+		mapRendererReady = false;
+		syncStartLocation.mockImplementation(request =>
+			request?.building?.value == 'AL' && request.floor?.value == '1'
+				? locations.get('AL|1') ?? null
+				: null
+		);
+		syncEndLocation.mockImplementation(request =>
+			request?.building?.value == 'B1' && request.floor?.value == '1'
+				? locations.get('B1|1') ?? null
+				: null
+		);
+
+		render(<HomePage />);
+
+		await user.click(screen.getAllByRole('button', { name: /fromchoose starting point/i })[0]);
+		await user.click(screen.getByRole('button', { name: /alarts lecture hall/i }));
+		await user.click(screen.getAllByRole('button', { name: /tochoose destination/i })[0]);
+		await user.click(screen.getByRole('button', { name: /b1biology 1/i }));
+		await user.click(screen.getAllByRole('button', { name: /find route/i })[0]);
+
+		expect(screen.getAllByRole('button', { name: /change route/i }).length).toBeGreaterThan(0);
 	});
 });
