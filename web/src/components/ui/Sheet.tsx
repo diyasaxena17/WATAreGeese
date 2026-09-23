@@ -7,6 +7,7 @@ export type SheetProps = HTMLAttributes<HTMLElement> & {
     showHandle?: boolean;
     handleLabel?: string;
     onHandlePointerDown?: (event: PointerEvent<HTMLButtonElement>) => void;
+    onHandlePointerMove?: (event: PointerEvent<HTMLButtonElement>) => void;
     onHandlePointerUp?: (event: PointerEvent<HTMLButtonElement>) => void;
     onHandlePointerCancel?: (event: PointerEvent<HTMLButtonElement>) => void;
 };
@@ -17,6 +18,7 @@ export default function Sheet({
     showHandle = true,
     handleLabel = 'Sheet handle',
     onHandlePointerDown,
+    onHandlePointerMove,
     onHandlePointerUp,
     onHandlePointerCancel,
     children,
@@ -27,7 +29,7 @@ export default function Sheet({
         <section
             role="region"
             className={cx(
-                'flex max-h-[88svh] w-full flex-col rounded-t-sheet border border-border bg-surface shadow-sheet md:max-w-md md:rounded-panel md:shadow-panel',
+                'flex max-h-[94svh] w-full flex-col rounded-t-sheet border border-border bg-surface shadow-sheet md:max-w-md md:rounded-panel md:shadow-panel',
                 className
             )}
             {...props}
@@ -38,6 +40,7 @@ export default function Sheet({
                     aria-label={handleLabel}
                     className="mx-auto mt-1 flex min-h-touch w-16 touch-none cursor-grab items-center justify-center rounded-control text-text-secondary active:cursor-grabbing focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
                     onPointerDown={onHandlePointerDown}
+                    onPointerMove={onHandlePointerMove}
                     onPointerUp={onHandlePointerUp}
                     onPointerCancel={onHandlePointerCancel}
                 >

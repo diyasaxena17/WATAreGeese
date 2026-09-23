@@ -21,7 +21,15 @@ export type HomePageProps = {
 	locationService?: LocationService;
 };
 
-type MobileSheetDetent = 'expanded' | 'medium' | 'minimized';
+type MobileSheetDetent = 'expanded' | 'medium' | 'collapsed';
+
+type SheetDragState = {
+	pointerId: number;
+	startY: number;
+	startHeight: number;
+	currentHeight: number;
+	element: HTMLElement;
+};
 
 export default function HomePage({ locationService }: HomePageProps = {}) {
 	const navigationService = useMemo(() => new NavigationService(), []);
@@ -43,7 +51,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	const [showInput, setShowInput] = useState(true);
 	const [showDirections, setShowDirections] = useState(false);
 	const [mobileSheetDetent, setMobileSheetDetent] = useState<MobileSheetDetent>('expanded');
-	const sheetDragStartY = useRef<number | null>(null);
+	const sheetDrag = useRef<SheetDragState | null>(null);
 	const handleSelectRouteStep = useCallback((step: number) => {
 		setHighlightedDirection(step);
 		setShowDirections(true);
@@ -197,21 +205,46 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 	);
 
 	const handleSheetDragStart = (event: PointerEvent<HTMLButtonElement>) => {
-		sheetDragStartY.current = event.clientY;
+		const element = event.currentTarget.closest('section');
+		if(!element) return;
+
+		const startHeight = element.getBoundingClientRect().height;
+		sheetDrag.current = {
+			pointerId: event.pointerId,
+			startY: event.clientY,
+			startHeight,
+			currentHeight: startHeight,
+			element
+		};
+		element.style.transition = 'none';
 		event.currentTarget.setPointerCapture?.(event.pointerId);
 	};
 
-	const handleSheetDragEnd = (event: PointerEvent<HTMLButtonElement>) => {
-		if(sheetDragStartY.current != null) {
-			const dragDistance = event.clientY - sheetDragStartY.current;
-			if(dragDistance > 160) setMobileSheetDetent('minimized');
-			else if(dragDistance > 80) {
-				setMobileSheetDetent(current => current == 'expanded' ? 'medium' : 'minimized');
-			} else if(dragDistance < -80) {
-				setMobileSheetDetent('expanded');
-			}
-		}
-		sheetDragStartY.current = null;
+	const handleSheetDragMove = (event: PointerEvent<HTMLButtonElement>) => {
+		const drag = sheetDrag.current;
+		if(!drag || drag.pointerId != event.pointerId) return;
+
+		const heights = mobileSheetHeights();
+		const nextHeight = clamp(
+			drag.startHeight - (event.clientY - drag.startY),
+			heights.collapsed,
+			heights.expanded
+		);
+		drag.currentHeight = nextHeight;
+		drag.element.style.height = `${nextHeight}px`;
+	};
+
+	const finishSheetDrag = (event: PointerEvent<HTMLButtonElement>) => {
+		const drag = sheetDrag.current;
+		if(!drag || drag.pointerId != event.pointerId) return;
+
+		const nextDetent = nearestMobileSheetDetent(drag.currentHeight);
+		setMobileSheetDetent(nextDetent);
+		sheetDrag.current = null;
+		window.requestAnimationFrame(() => {
+			drag.element.style.height = '';
+			drag.element.style.transition = '';
+		});
 	};
 
 	const handleCurrentLocation = async () => {
@@ -283,56 +316,75 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 					</div>
 				</Panel>
 			}
-			sheet={mobileSheetDetent == 'minimized' ? (
-				<div className="rounded-panel border border-border bg-surface p-2 shadow-panel">
-					<Button
-						variant="secondary"
-						className="w-full justify-between"
-						onClick={() => setMobileSheetDetent(hasRoute ? 'medium' : 'expanded')}
-					>
-						{startBuilding && endBuilding ? `${startBuilding.buildingCode} to ${endBuilding.buildingCode}` : 'Plan route'}
-					</Button>
-				</div>
-			) : (
+			sheet={(
 				<Sheet
-					className={`wg-routing-panel-pattern transition-[height] duration-200 ${mobileSheetDetent == 'medium' ? 'h-[58svh]' : 'h-[88svh]'}`}
+					className={`wg-routing-panel-pattern overflow-hidden transition-[height] duration-300 ease-out will-change-[height] ${mobileSheetDetent == 'expanded' ? 'h-[94svh]' : mobileSheetDetent == 'medium' ? 'h-[58svh]' : 'h-[6.5rem]'}`}
 					handleLabel="Drag route planner to resize"
 					onHandlePointerDown={handleSheetDragStart}
-					onHandlePointerUp={handleSheetDragEnd}
-					onHandlePointerCancel={() => {
-						sheetDragStartY.current = null;
-					}}
-					header={
+					onHandlePointerMove={handleSheetDragMove}
+					onHandlePointerUp={finishSheetDrag}
+					onHandlePointerCancel={finishSheetDrag}
+					header={mobileSheetDetent == 'collapsed' ? null : (
 						<div>
 							<SectionHeader title={<BrandTitle />} description="Waterloo, without the outside." />
 						</div>
-					}
+					)}
 				>
-					<div className="space-y-4">
-						{showInput ? renderForm() : (
-							<div className="space-y-4">
-								{showDirections ? renderDirectionsPanel('mobile') : (
-									<RouteSummary
-										route={route}
-										from={toRouteEndpoint(startBuilding)}
-										to={toRouteEndpoint(endBuilding)}
-										onChangeRoute={showRouteForm}
-									/>
-								)}
-							</div>
-						)}
-						{hasRoute ? (
-							<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
-								{showDirections ? 'Hide directions' : 'Show directions'}
-							</Button>
-						) : null}
-					</div>
+					{mobileSheetDetent == 'collapsed' ? (
+						<Button
+							variant="secondary"
+							className="w-full justify-between"
+							onClick={() => setMobileSheetDetent(hasRoute ? 'medium' : 'expanded')}
+						>
+							{startBuilding && endBuilding ? `${startBuilding.buildingCode} to ${endBuilding.buildingCode}` : 'Plan route'}
+						</Button>
+					) : (
+						<div className="space-y-4">
+							{showInput ? renderForm() : (
+								<div className="space-y-4">
+									{showDirections ? renderDirectionsPanel('mobile') : (
+										<RouteSummary
+											route={route}
+											from={toRouteEndpoint(startBuilding)}
+											to={toRouteEndpoint(endBuilding)}
+											onChangeRoute={showRouteForm}
+										/>
+									)}
+								</div>
+							)}
+							{hasRoute ? (
+								<Button variant="secondary" className="w-full" onClick={() => setShowDirections(!showDirections)}>
+									{showDirections ? 'Hide directions' : 'Show directions'}
+								</Button>
+							) : null}
+						</div>
+					)}
 				</Sheet>
 			)}
 		>
 			{hasRoute && mapRenderer.canRenderDirections && showDirections ? null : ''}
 		</AppShell>
 	);
+}
+
+function mobileSheetHeights() {
+	const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+	return {
+		collapsed: 104,
+		medium: viewportHeight * 0.58,
+		expanded: viewportHeight * 0.94
+	};
+}
+
+function nearestMobileSheetDetent(height: number): MobileSheetDetent {
+	const heights = mobileSheetHeights();
+	return (Object.keys(heights) as MobileSheetDetent[]).reduce((nearest, detent) =>
+		Math.abs(heights[detent] - height) < Math.abs(heights[nearest] - height) ? detent : nearest
+	, 'medium');
+}
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(max, Math.max(min, value));
 }
 
 function BrandTitle() {

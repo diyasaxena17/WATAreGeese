@@ -48,7 +48,7 @@ export default function AppShell({
                 ) : null}
 
                 {sheet ? (
-                    <div className="absolute inset-x-0 bottom-0 z-[1100] max-h-[88svh] px-2 pb-2 sm:px-4 sm:pb-4 lg:hidden">
+                    <div className="absolute inset-x-0 bottom-0 z-[1100] max-h-[94svh] px-2 pb-2 sm:px-4 sm:pb-4 lg:hidden">
                         {sheet}
                     </div>
                 ) : null}
