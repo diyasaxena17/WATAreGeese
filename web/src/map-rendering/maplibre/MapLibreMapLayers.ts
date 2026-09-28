@@ -33,6 +33,7 @@ export const mapLibreVisualTheme = {
 		startColor: '#1d4ed8',
 		destinationColor: '#111827',
 		userColor: '#2563eb',
+		userOutlineColor: '#111827',
 		haloColor: '#ffffff'
 	},
 	path: {
@@ -243,6 +244,20 @@ export const locationMarkerLayers: LayerSpecification[] = [
 		}
 	},
 	{
+		id: 'location-marker-user-ring',
+		type: 'circle',
+		source: LOCATION_MARKER_SOURCE_ID,
+		filter: ['==', ['get', 'kind'], 'user'],
+		paint: {
+			'circle-color': mapLibreVisualTheme.marker.haloColor,
+			'circle-radius': 14,
+			'circle-opacity': 0.96,
+			'circle-stroke-color': mapLibreVisualTheme.marker.userOutlineColor,
+			'circle-stroke-opacity': 0.9,
+			'circle-stroke-width': 2
+		}
+	},
+	{
 		id: 'location-marker-halo',
 		type: 'circle',
 		source: LOCATION_MARKER_SOURCE_ID,
@@ -255,7 +270,7 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				10,
 				'end',
 				10,
-				7.5
+				9
 			],
 			'circle-opacity': [
 				'match',
@@ -277,7 +292,7 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				'match',
 				['get', 'kind'],
 				'user',
-				2,
+				2.5,
 				2.5
 			]
 		}
@@ -303,7 +318,7 @@ export const locationMarkerLayers: LayerSpecification[] = [
 				5.2,
 				'end',
 				5.2,
-				4.2
+				5.8
 			],
 			'circle-opacity': 0.98
 		}

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -28,6 +28,25 @@ function deferred<T>() {
 function makeService(result: Promise<UserPosition> | UserPosition): LocationService {
     return {
         getCurrentPosition: vi.fn(() => Promise.resolve(result))
+    };
+}
+
+function makeWatchingService(result: Promise<UserPosition> | UserPosition) {
+    const service = {
+        getCurrentPosition: vi.fn(() => Promise.resolve(result)),
+        watchPosition: vi.fn(),
+        emitPosition: undefined as ((position: UserPosition) => void) | undefined,
+        stopWatching: vi.fn()
+    };
+
+    service.watchPosition.mockImplementation((onPosition: (position: UserPosition) => void) => {
+        service.emitPosition = onPosition;
+        return service.stopWatching;
+    });
+
+    return service as LocationService & {
+        emitPosition?: (position: UserPosition) => void;
+        stopWatching: ReturnType<typeof vi.fn>;
     };
 }
 
@@ -89,6 +108,45 @@ describe('useUserLocation', () => {
         expect(screen.getByText('Latitude: 43.4723')).toBeInTheDocument();
         expect(screen.getByText('Longitude: -80.5449')).toBeInTheDocument();
         expect(screen.getByText('Error: none')).toBeInTheDocument();
+    });
+
+    it('updates the stored position while a live watcher is active', async () => {
+        const service = makeWatchingService(userPosition);
+        const user = userEvent.setup();
+
+        render(<LocationHarness service={service} />);
+
+        await user.click(screen.getByRole('button', { name: 'Request' }));
+        await screen.findByText('Status: available');
+
+        act(() => {
+            service.emitPosition?.({
+                ...userPosition,
+                coordinates: {
+                    latitude: 43.4731,
+                    longitude: -80.5456
+                },
+                timestamp: 1720000000500
+            });
+        });
+
+        expect(screen.getByText('Latitude: 43.4731')).toBeInTheDocument();
+        expect(screen.getByText('Longitude: -80.5456')).toBeInTheDocument();
+        expect(service.watchPosition).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops watching location when cleared', async () => {
+        const service = makeWatchingService(userPosition);
+        const user = userEvent.setup();
+
+        render(<LocationHarness service={service} />);
+
+        await user.click(screen.getByRole('button', { name: 'Request' }));
+        await screen.findByText('Status: available');
+
+        await user.click(screen.getByRole('button', { name: 'Clear' }));
+
+        expect(service.stopWatching).toHaveBeenCalledTimes(1);
     });
 
     it('maps permission denied to denied state', async () => {

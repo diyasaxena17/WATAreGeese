@@ -21,15 +21,26 @@ export default function UserLocationMarker({ position }: UserLocationMarkerProps
                     pathOptions={{
                         color: 'var(--color-route)',
                         fillColor: 'var(--color-route)',
-                        fillOpacity: 0.08,
-                        opacity: 0.25,
-                        weight: 1
+                        fillOpacity: 0.1,
+                        opacity: 0.32,
+                        weight: 1.5
                     }}
                 />
             ) : null}
             <CircleMarker
                 center={center}
-                radius={7}
+                radius={9}
+                pathOptions={{
+                    color: 'var(--color-text-primary)',
+                    fillColor: 'var(--color-route)',
+                    fillOpacity: 1,
+                    opacity: 1,
+                    weight: 2
+                }}
+            />
+            <CircleMarker
+                center={center}
+                radius={6}
                 pathOptions={{
                     color: 'var(--color-surface)',
                     fillColor: 'var(--color-route)',

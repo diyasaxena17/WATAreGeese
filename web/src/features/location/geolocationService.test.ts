@@ -32,17 +32,23 @@ function makeError(code: number, message = 'browser error'): GeolocationPosition
 
 function makeGeolocation({
     position,
-    error
+    error,
+    watchId = 7
 }: {
     position?: GeolocationPosition;
     error?: GeolocationPositionError;
+    watchId?: number;
 } = {}): Geolocation {
     return {
         getCurrentPosition: vi.fn((success: PositionCallback, failure?: PositionErrorCallback) => {
             if(error) failure?.(error);
             else success(position ?? makePosition());
         }),
-        watchPosition: vi.fn(),
+        watchPosition: vi.fn((success: PositionCallback, failure?: PositionErrorCallback) => {
+            if(error) failure?.(error);
+            else success(position ?? makePosition());
+            return watchId;
+        }),
         clearWatch: vi.fn()
     };
 }
@@ -113,6 +119,34 @@ describe('BrowserGeolocationService', () => {
                 maximumAge: 0
             }
         );
+    });
+
+    it('watches movement with the same normalized position model and stops by watch id', () => {
+        const geolocation = makeGeolocation({
+            position: makePosition({
+                latitude: 43.4731,
+                longitude: -80.5456,
+                accuracy: 6
+            }),
+            watchId: 42
+        });
+        const onPosition = vi.fn();
+        const onError = vi.fn();
+
+        const stop = new BrowserGeolocationService(geolocation).watchPosition(onPosition, onError);
+
+        expect(onPosition).toHaveBeenCalledWith({
+            coordinates: {
+                latitude: 43.4731,
+                longitude: -80.5456
+            },
+            accuracyMeters: 6,
+            timestamp: 1720000000000
+        });
+        expect(onError).not.toHaveBeenCalled();
+
+        stop();
+        expect(geolocation.clearWatch).toHaveBeenCalledWith(42);
     });
 
     it('normalizes permission-denied errors', async () => {

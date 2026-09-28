@@ -149,11 +149,29 @@ describe('MapLibre location marker layers', () => {
 	it('orders marker layers by accuracy, halo, core, and endpoint glyphs', () => {
 		expect(locationMarkerLayers.map(layer => layer.id)).toEqual([
 			'location-marker-accuracy',
+			'location-marker-user-ring',
 			'location-marker-halo',
 			'location-marker-core',
 			'location-marker-glyphs'
 		]);
 		expect(locationMarkerLayers.every(layer => layer.source == LOCATION_MARKER_SOURCE_ID)).toBe(true);
+	});
+
+	it('gives the user position a prominent ring that endpoints do not use', () => {
+		const userRingLayer = locationMarkerLayers.find(layer => layer.id == 'location-marker-user-ring');
+		const haloLayer = locationMarkerLayers.find(layer => layer.id == 'location-marker-halo');
+		const coreLayer = locationMarkerLayers.find(layer => layer.id == 'location-marker-core');
+
+		expect(userRingLayer).toMatchObject({
+			type: 'circle',
+			filter: ['==', ['get', 'kind'], 'user'],
+			paint: {
+				'circle-radius': 14,
+				'circle-stroke-color': mapLibreVisualTheme.marker.userOutlineColor
+			}
+		});
+		expect(haloLayer?.paint?.['circle-radius']).toContain(9);
+		expect(coreLayer?.paint?.['circle-radius']).toContain(5.8);
 	});
 
 	it('distinguishes endpoints with glyphs instead of tiny color differences alone', () => {

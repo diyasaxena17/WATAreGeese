@@ -5,12 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocationError } from '../features/location';
 import { LocationService, UserPosition } from '../features/location/types';
 import { getStartEndLocations } from '../map/locations';
-import { MapLocationSyncRequest } from '../map-rendering';
 import HomePage from './HomePage';
 
 const recenterUserLocation = vi.fn();
-const syncStartLocation = vi.fn((_request?: MapLocationSyncRequest) => null);
-const syncEndLocation = vi.fn((_request?: MapLocationSyncRequest) => null);
+const syncStartLocation = vi.fn(() => null);
+const syncEndLocation = vi.fn(() => null);
 let mapRendererReady = true;
 const mockMapRenderer = {
 	mapElement: <div>Map area</div>,

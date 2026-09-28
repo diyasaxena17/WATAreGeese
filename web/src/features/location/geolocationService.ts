@@ -29,6 +29,25 @@ export class BrowserGeolocationService implements LocationService {
             );
         });
     }
+
+    watchPosition(
+        onPosition: (position: UserPosition) => void,
+        onError: (error: LocationError) => void,
+        options: LocationRequestOptions = {}
+    ) {
+        if(!this.geolocation) {
+            onError(new LocationError('unsupported-browser', 'This browser does not support current location.'));
+            return () => {};
+        }
+
+        const watchId = this.geolocation.watchPosition(
+            position => onPosition(toUserPosition(position)),
+            error => onError(normalizeGeolocationError(error)),
+            toBrowserPositionOptions(options)
+        );
+
+        return () => this.geolocation?.clearWatch(watchId);
+    }
 }
 
 export function toUserPosition(position: GeolocationPosition): UserPosition {

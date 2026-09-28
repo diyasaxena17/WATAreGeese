@@ -11,8 +11,10 @@ vi.mock('react-leaflet', () => ({
             {center.join(',')}:{radius}
         </div>
     ),
-    CircleMarker: ({ center }: { center: [number, number] }) => (
-        <div data-testid="user-location-dot">{center.join(',')}</div>
+    CircleMarker: ({ center, radius }: { center: [number, number]; radius: number }) => (
+        <div data-testid="user-location-dot">
+            {center.join(',')}:{radius}
+        </div>
     )
 }));
 
@@ -36,14 +38,17 @@ describe('UserLocationMarker', () => {
     it('renders the user marker and accuracy circle when position exists', () => {
         render(<UserLocationMarker position={position} />);
 
-        expect(screen.getByTestId('user-location-dot')).toHaveTextContent('43.4723,-80.5449');
+        const markerRings = screen.getAllByTestId('user-location-dot');
+        expect(markerRings).toHaveLength(2);
+        expect(markerRings[0]).toHaveTextContent('43.4723,-80.5449:9');
+        expect(markerRings[1]).toHaveTextContent('43.4723,-80.5449:6');
         expect(screen.getByTestId('accuracy-circle')).toHaveTextContent('43.4723,-80.5449:14');
     });
 
     it('omits the accuracy circle when accuracy is unavailable', () => {
         render(<UserLocationMarker position={{ ...position, accuracyMeters: undefined }} />);
 
-        expect(screen.getByTestId('user-location-dot')).toBeInTheDocument();
+        expect(screen.getAllByTestId('user-location-dot')).toHaveLength(2);
         expect(screen.queryByTestId('accuracy-circle')).not.toBeInTheDocument();
     });
 

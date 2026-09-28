@@ -1,3 +1,5 @@
+import type { LocationError } from './errors';
+
 export type GeoPoint = {
     latitude: number;
     longitude: number;
@@ -17,6 +19,11 @@ export type LocationRequestOptions = {
 
 export type LocationService = {
     getCurrentPosition: (options?: LocationRequestOptions) => Promise<UserPosition>;
+    watchPosition?: (
+        onPosition: (position: UserPosition) => void,
+        onError: (error: LocationError) => void,
+        options?: LocationRequestOptions
+    ) => () => void;
 };
 
 export type UserLocationStatus =
