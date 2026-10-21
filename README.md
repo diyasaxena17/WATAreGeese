@@ -6,6 +6,12 @@ It is very much still in progress. The public test deployment is available at:
 
 https://wataregeese.vercel.app/
 
+
+
+https://github.com/user-attachments/assets/15514962-a893-4b0c-a6bf-ce1eb851a641
+
+
+
 WATAreGeese is built upon and inspired by the open-source work of WATisRain and WATIsGrass. Thank you to those projects and their contributors.
 
 ## Current State
@@ -59,36 +65,6 @@ Useful docs:
 - [Credits](CREDITS.md)
 - [Notice](NOTICE.md)
 
-## Local Development
-
-Install and run the web app:
-
-```sh
-cd web
-npm install
-npm run dev
-```
-
-Run tests:
-
-```sh
-cd web
-npm test
-```
-
-Run the production build:
-
-```sh
-cd web
-npm run build
-```
-
-Other available web scripts:
-
-```sh
-npm run lint
-npm run preview
-```
 
 ## Development Status
 
