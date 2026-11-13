@@ -286,7 +286,7 @@ export default function HomePage({ locationService }: HomePageProps = {}) {
 					<div className="space-y-4">
 						<SectionHeader
 							title={<BrandTitle />}
-							description="Waterloo, without the outside. built off of WATIsGrass"
+							description="Waterloo, without the outside. Built off of WATIsGrass (https://watisgrass.vercel.app/)."
 						/>
 						{hasRoute && !showInput ? (
 							<div className="space-y-4">
